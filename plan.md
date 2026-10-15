@@ -12,6 +12,12 @@ Ersätter PAL MCP.
 Status: plan, inget implementerat.
 
 # Problem att lösa
+Ett andra, tredje och fjärde par ögon när det behövs:
+- När man har ett svårt eller fundamentalt problem att lösa, där det är viktigt att det blir rätt
+- När det är ett område där man inte är kunnig och vill vara säker på att det blir en bra lösning
+- När man är beslutstrött
+
+## Brister i PAL
 PAL MCP har fyra brister som en egen server tar bort:
 
 | Brist i PAL                                     | Lösning                                        |
