@@ -91,6 +91,18 @@ Skiljer sig från ai-storage. Här ligger en OpenRouter-nyckel bakom, så server
 - OpenRouter-nyckel som Workers-secret.
 - `claude mcp add --transport http roundtable <url> --header "Authorization: Bearer <token>"`
 
+# Hosting
+
+| | |
+|------------------|-------------------------------------------|
+| Cloudflare-konto | [borttaget], samma som ai-storage  |
+| Account ID       | [borttaget]          |
+| Workers-subdomän | treceni.workers.dev                       |
+| Adress           | https://mcp-roundtable.treceni.workers.dev |
+
+Verifierat 2026-10-15 med `wrangler whoami` i ai-storage-containern. Macens wrangler-inloggning i
+`~/Library/Preferences/.wrangler` ser bara detta konto.
+
 # Teknik
 Kopieras från ai-storage, se dess DESIGN.md och CLAUDE.md.
 - JavaScript, ES-moduler, Bun, `@modelcontextprotocol/server` v2, createMcpHandler
