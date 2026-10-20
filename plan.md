@@ -9,7 +9,8 @@ Ersätter PAL MCP.
 | Skill som lappar PAL   | ~/.claude/skills/my-skill-pal-models/SKILL.md        |
 | Syskonprojekt, mönster | ~/code/ai-storage, se DESIGN.md och CLAUDE.md        |
 
-Status: steg 3 deployat 2026-10-20, väntar på test med nyckel. `list_models` deployat, nås via claude.ai-connector.
+Status: steg 3 klart 2026-10-20. `chat` svarar från Gemini och GPT via claude.ai-connectorn, så `Authorization`
+i Request headers når servern. Utan nyckel ger isError. Öppet: `chat` drar 18–56 ms CPU, se Cloudflare-gränser.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -87,9 +88,16 @@ GraphQL Analytics (`workersInvocationsAdaptive`):
 | hello                    | 3,2 ms | 11,6 ms | 25,2 ms |
 | list_models utan cache   | 5,5 ms | 7,8 ms  | 26,4 ms |
 | list_models med KV-cache | 3,3 ms | 4,7 ms  | 30,2 ms |
+| chat utan nyckel, varm   | 2,7 ms |         |         |
+| chat med nyckel          | 33 ms  |         | 56 ms   |
 
 p99 över 10 ms i alla versioner, även hello. Troligen kallstarter. Inga fel. Dashboardens "Median CPU time"
 visade 16,7 ms för versionen utan cache, men den siffran stämmer inte med GraphQL.
+
+`chat` mätt 2026-10-20 på version c17c4004, fem anrop med nyckel via claude.ai: 18, 20, 33, 37 och 56 ms,
+med 1,6–5,5 s väntan på OpenRouter. Inga fel, ingen 1102. Varma anrop utan nyckel och `tools/list` tar
+2,7 ms, så MCP-lagret är billigt och kostnaden sitter i fetch mot OpenRouter och svaret. CPU-tiden följer
+inte väntetiden entydigt. Orsaken är inte utredd. Gratisplanen tycks tolerera överskridningen än så länge.
 
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
