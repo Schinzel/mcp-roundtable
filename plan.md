@@ -10,7 +10,8 @@ Ersätter PAL MCP.
 | Syskonprojekt, mönster | ~/code/ai-storage, se DESIGN.md och CLAUDE.md        |
 
 Status: steg 3 klart 2026-10-20. `chat` svarar från Gemini och GPT via claude.ai-connectorn, så `Authorization`
-i Request headers når servern. Utan nyckel ger isError. Öppet: `chat` drar 18–56 ms CPU, se Cloudflare-gränser.
+i Request headers når servern. Utan nyckel ger isError. `chat` drar 18–56 ms CPU på grund av kallstarter, se Cloudflare-gränser.
+Nästa: steg 4.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -96,8 +97,20 @@ visade 16,7 ms för versionen utan cache, men den siffran stämmer inte med Grap
 
 `chat` mätt 2026-10-20 på version c17c4004, fem anrop med nyckel via claude.ai: 18, 20, 33, 37 och 56 ms,
 med 1,6–5,5 s väntan på OpenRouter. Inga fel, ingen 1102. Varma anrop utan nyckel och `tools/list` tar
-2,7 ms, så MCP-lagret är billigt och kostnaden sitter i fetch mot OpenRouter och svaret. CPU-tiden följer
-inte väntetiden entydigt. Orsaken är inte utredd. Gratisplanen tycks tolerera överskridningen än så länge.
+2,7 ms.
+
+Utrett samma dag med en preview-version (`wrangler versions upload`) och `wrangler tail`, som visar CPU per anrop.
+- Väntan kostar inget. fetch med 4 s väntan, med svar som droppar in, eller sleep: under 1 ms.
+- MCP-verktyg med fetch och 4 s väntan, varm isolate: 3 ms.
+- Första anropet i en ny isolate: 8–13 ms, även `tools/list` från curl. Varma: 2–3 ms.
+- claude.ai-anropen kommer från olika colos i USA (EWR, ATL) och landar nästan alltid i en kall isolate.
+  Protokollheadern och övriga headers spelar ingen roll.
+
+Orsak: kallstarter. Bundlen är 886 KB, varav zod v4 och MCP-SDK:n nästan allt, och den kompileras vid första
+anropet i varje isolate. Vår egen kod och OpenRouter-svaret kostar nästan inget.
+
+Beslut 2026-10-20: låt det vara och bevaka fel (1102) i GraphQL efter varje steg. Dyker 1102 upp, byt till
+Workers Paid. Att skriva MCP-protokollet själva utan SDK valdes bort, för mycket jobb för 5 USD/månad.
 
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
