@@ -3,11 +3,11 @@
 Remote MCP på Cloudflare Workers som låter Claude ringa upp andra modeller via OpenRouter och låta dem diskutera med varandra.
 Ersätter PAL MCP.
 
-| Referens                | Var                                                        |
-|-------------------------|------------------------------------------------------------|
-| PAL MCP, repot          | https://github.com/BeehiveInnovations/pal-mcp-server        |
-| Skill som lappar PAL    | ~/.claude/skills/my-skill-pal-models/SKILL.md               |
-| Syskonprojekt, mönster  | ~/code/ai-storage, se DESIGN.md och CLAUDE.md               |
+| Referens               | Var                                                  |
+|------------------------|------------------------------------------------------|
+| PAL MCP, repot         | https://github.com/BeehiveInnovations/pal-mcp-server |
+| Skill som lappar PAL   | ~/.claude/skills/my-skill-pal-models/SKILL.md        |
+| Syskonprojekt, mönster | ~/code/ai-storage, se DESIGN.md och CLAUDE.md        |
 
 Status: steg 2 klart 2026-10-20. `list_models` deployat, `claude mcp add` fungerar.
 
@@ -20,11 +20,11 @@ Ett andra, tredje och fjärde par ögon när det behövs:
 ## Brister i PAL
 PAL MCP har tre brister som en egen server tar bort:
 
-| Brist i PAL                                     | Lösning                                        |
-|-------------------------------------------------|------------------------------------------------|
-| Antaget kontextfönster 32k för okända modeller  | `context_length` från samma endpoint           |
-| Brus i svar ("AGENT'S TURN: ...")               | Svaret returneras som det är                   |
-| Exakta OpenRouter-slugs krävs, inga alias       | Fortsatt exakta slugs, medvetet. Inga alias    |
+| Brist i PAL                                    | Lösning                                     |
+|------------------------------------------------|---------------------------------------------|
+| Antaget kontextfönster 32k för okända modeller | `context_length` från samma endpoint        |
+| Brus i svar ("AGENT'S TURN: ...")              | Svaret returneras som det är                |
+| Exakta OpenRouter-slugs krävs, inga alias      | Fortsatt exakta slugs, medvetet. Inga alias |
 
 PAL:s modellkatalog var tänkt som en fjärde brist, men 2026-10-20 visade PAL alla aktuella modeller.
 Skillnaden är att `list_models` bara visar aktuella modeller, utan varianter, nyast först.
@@ -40,28 +40,28 @@ Behålls från PAL:
 
 # Beslut
 
-| Fråga                       | Beslut                                   | Varför                                                      |
-|-----------------------------|------------------------------------------|-------------------------------------------------------------|
-| Språk och hosting           | JavaScript på Cloudflare Workers         | Samma mönster som ai-storage, känt, snabbt                  |
-| Repo-namn                   | mcp-roundtable                           | Grupperas med framtida mcp-* i ~/code                       |
-| Servernamn i Claude Code    | roundtable                               | Prompts blir `/roundtable:consensus`                        |
-| Serverns ansvar             | Primitivt. Ett tool, `chat`              | Claude orkestrerar diskussionen själv, flexibelt            |
-| Diskussionsupplägg          | MCP-prompts i servern                    | Följer med servern vid `claude mcp add`, kräver ingen synk  |
-| Alias som "senaste GPT"     | Nej                                      | Otydligt vilken modell som svarade                          |
-| Omfång                      | Bara chat tills det är flawless          | Få men felfria funktioner                                   |
+| Fråga                    | Beslut                           | Varför                                                     |
+|--------------------------|----------------------------------|------------------------------------------------------------|
+| Språk och hosting        | JavaScript på Cloudflare Workers | Samma mönster som ai-storage, känt, snabbt                 |
+| Repo-namn                | mcp-roundtable                   | Grupperas med framtida mcp-* i ~/code                      |
+| Servernamn i Claude Code | roundtable                       | Prompts blir `/roundtable:consensus`                       |
+| Serverns ansvar          | Primitivt. Ett tool, `chat`      | Claude orkestrerar diskussionen själv, flexibelt           |
+| Diskussionsupplägg       | MCP-prompts i servern            | Följer med servern vid `claude mcp add`, kräver ingen synk |
+| Alias som "senaste GPT"  | Nej                              | Otydligt vilken modell som svarade                         |
+| Omfång                   | Bara chat tills det är flawless  | Få men felfria funktioner                                  |
 
 # MCP tools
 
 ## chat
 
-| Parameter       | Typ     | Obligatorisk | Beskrivning                                               |
-|-----------------|---------|--------------|-----------------------------------------------------------|
-| model           | text    | ja           | Exakt OpenRouter-slug                                     |
-| prompt          | text    | ja           |                                                           |
-| continuation_id | text    | nej          | Fortsätter en tidigare konversation med samma modell      |
-| files           | lista   | nej          | Filinnehåll som skickas med. Budget från `context_length` |
-| thinking        | text    | nej          | Nivå enligt OpenRouters reasoning-parameter               |
-| temperature     | tal     | nej          |                                                           |
+| Parameter       | Typ   | Obligatorisk | Beskrivning                                               |
+|-----------------|-------|--------------|-----------------------------------------------------------|
+| model           | text  | ja           | Exakt OpenRouter-slug                                     |
+| prompt          | text  | ja           |                                                           |
+| continuation_id | text  | nej          | Fortsätter en tidigare konversation med samma modell      |
+| files           | lista | nej          | Filinnehåll som skickas med. Budget från `context_length` |
+| thinking        | text  | nej          | Nivå enligt OpenRouters reasoning-parameter               |
+| temperature     | tal   | nej          |                                                           |
 
 Returnerar modellens svar, continuation_id och tokenåtgång. Inget mer.
 
@@ -69,11 +69,11 @@ Returnerar modellens svar, continuation_id och tokenåtgång. Inget mer.
 Hämtar OpenRouter `/models` med filter hos OpenRouter, nyast först. Returnerar slug, namn, kontextfönster och datum då
 modellen lades till. Filter på text i slug eller namn.
 
-| Filter          | Värde                                         | Varför                                   |
-|-----------------|-----------------------------------------------|------------------------------------------|
-| `model_authors` | openai, google, anthropic, x-ai, deepseek     | Fast lista i servern                     |
-| `max_age_days`  | 365                                           | Gamla och döda modeller försvinner       |
-| I servern       | Slugs med `:` (`:batch`, `:free`) och `~`     | Varianter och OpenRouters alias          |
+| Filter          | Värde                                     | Varför                             |
+|-----------------|-------------------------------------------|------------------------------------|
+| `model_authors` | openai, google, anthropic, x-ai, deepseek | Fast lista i servern               |
+| `max_age_days`  | 365                                       | Gamla och döda modeller försvinner |
+| I servern       | Slugs med `:` (`:batch`, `:free`) och `~` | Varianter och OpenRouters alias    |
 
 Hela listan är 785 KB och 468 modeller. Filtrerad hos OpenRouter blir den 287 KB och 145 modeller,
 varav 82 utan varianter och alias. Uppmätt 2026-10-20. Filtret hålls hos OpenRouter för att spara CPU-tid,
@@ -94,11 +94,11 @@ visade 16,7 ms för versionen utan cache, men den siffran stämmer inte med Grap
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
 
-| Prompt    | Upplägg                                                      |
-|-----------|--------------------------------------------------------------|
-| consensus | Flera modeller, flera rundor, nå samsyn                      |
-| tenth_man | Flera modeller, en har i uppdrag att säga emot               |
-| critic    | En modell granskar x och är kritisk                          |
+| Prompt    | Upplägg                                        |
+|-----------|------------------------------------------------|
+| consensus | Flera modeller, flera rundor, nå samsyn        |
+| tenth_man | Flera modeller, en har i uppdrag att säga emot |
+| critic    | En modell granskar x och är kritisk            |
 
 Öppet: om Claude Code kan plocka MCP-prompts själv från löpande text, eller om de bara nås via slash-kommando. Testas när servern finns.
 
@@ -107,25 +107,36 @@ KV, binding `CACHE`: modellistan för `list_models`, en timme.
 
 D1. Konversationer för continuation_id.
 
-| Tabell       | Kolumner                                              |
-|--------------|-------------------------------------------------------|
-| conversation | id, model, created, updated                           |
-| message      | id, conversation_id, role, content, created           |
+| Tabell       | Kolumner                                    |
+|--------------|---------------------------------------------|
+| conversation | id, key_hash, model, created, updated       |
+| message      | id, conversation_id, role, content, created |
 
 # Auth
-Skiljer sig från ai-storage. Här ligger en OpenRouter-nyckel bakom, så servern får inte vara öppen.
-- Bearer-token i `Authorization`-header. Token som Workers-secret.
-- OpenRouter-nyckel som Workers-secret.
-- `claude mcp add --transport http roundtable <url> --header "Authorization: Bearer <token>"`
+Var och en använder sin egen OpenRouter-nyckel. Servern har ingen egen nyckel och ingen egen token.
+- Nyckeln skickas i `Authorization: Bearer sk-or-...` i varje anrop och går vidare till OpenRouter.
+- `chat` utan nyckel ger 401. `list_models` kräver ingen nyckel.
+- Nyckeln sparas aldrig. D1 sparar SHA-256 av nyckeln i `conversation.key_hash`. Ett continuation_id
+  med fel nyckel ger samma fel som ett okänt id, så andras konversationer går inte att läsa.
+- Workers-loggar avstängda. Nyckeln loggas inte.
+
+Installation:
+- Claude Code: `claude mcp add --scope user --transport http roundtable <url> --header "Authorization: Bearer sk-or-..."`
+- claude.ai: custom connector, Authentication "No sign in", nyckeln under Request headers. Följer med till
+  Desktop och mobil. Otestat om `Authorization` tillåts där. Annars tar servern även `X-OpenRouter-Key`.
+
+Förtroende: nyckeln passerar servern, så den som driftar servern kan i teorin läsa den. README ska säga
+att man skapar en egen OpenRouter-nyckel för roundtable med kreditgräns, så den kan dras tillbaka.
+Självhostning med "Deploy to Cloudflare"-knapp valdes bort 2026-10-20.
 
 # Hosting
 
-| | |
-|------------------|-------------------------------------------|
-| Cloudflare-konto | [borttaget], samma som ai-storage  |
-| Account ID       | [borttaget]          |
-| Workers-subdomän | treceni.workers.dev                       |
-| Adress           | https://mcp-roundtable.treceni.workers.dev |
+|                  |                                                                                    |
+|------------------|------------------------------------------------------------------------------------|
+| Cloudflare-konto | [borttaget], samma som ai-storage                                           |
+| Account ID       | [borttaget]                                                   |
+| Workers-subdomän | treceni.workers.dev                                                                |
+| Adress           | https://mcp-roundtable.treceni.workers.dev                                         |
 | Workers Builds   | Push till main deployar. Kräver att Cloudflares GitHub-app har tillgång till repot |
 
 Verifierat 2026-10-15 med `wrangler whoami` i ai-storage-containern. Macens wrangler-inloggning i
@@ -146,18 +157,18 @@ Kopieras från ai-storage, se dess DESIGN.md och CLAUDE.md.
 
 # Steg
 
-| Steg | Vad                                                           | Klart när                                          |
-|------|---------------------------------------------------------------|----------------------------------------------------|
-| 1    | Skelett från ai-storage, deploy till Workers, hello-tool      | `claude mcp add` fungerar från Claude Code         |
-| 2    | `list_models` mot OpenRouter                                  | Aktuella modeller, fem företag, utan varianter     |
-| 3    | `chat` utan continuation                                      | Ett svar från Gemini och ett från GPT, parallellt  |
-| 4    | continuation_id med D1                                        | Tre rundor med samma modell, full kontext          |
-| 5    | files med budget från `context_length`                        | Skicka två Java-filer utan att falla               |
-| 6    | thinking och temperature                                      |                                                    |
-| 7    | Auth med bearer-token                                         | Anrop utan token ger 401                           |
-| 8    | Prompts consensus, tenth_man, critic                          | En konsensusdiskussion körd end to end             |
-| 9    | README som säljer konceptet, gif                              |                                                    |
-| 10   | Ta bort PAL och my-skill-pal-models                           |                                                    |
+| Steg | Vad                                                      | Klart när                                            |
+|------|----------------------------------------------------------|------------------------------------------------------|
+| 1    | Skelett från ai-storage, deploy till Workers, hello-tool | `claude mcp add` fungerar från Claude Code           |
+| 2    | `list_models` mot OpenRouter                             | Aktuella modeller, fem företag, utan varianter       |
+| 3    | `chat` utan continuation, nyckel från header             | Svar från Gemini och GPT parallellt. Utan nyckel 401 |
+| 4    | continuation_id med D1 och key_hash                      | Tre rundor, full kontext. Fel nyckel nekas           |
+| 5    | files med budget från `context_length`                   | Skicka två Java-filer utan att falla                 |
+| 6    | thinking och temperature                                 |                                                      |
+| 7    | Connector i claude.ai med Request headers                | En chat från claude.ai                               |
+| 8    | Prompts consensus, tenth_man, critic                     | En konsensusdiskussion körd end to end               |
+| 9    | README som säljer konceptet, gif                         |                                                      |
+| 10   | Ta bort PAL och my-skill-pal-models                      |                                                      |
 
 # Senare, inte nu
 - Remote tool `discuss` som kör ett helt upplägg i servern
