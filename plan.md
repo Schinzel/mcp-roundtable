@@ -109,6 +109,7 @@ Skiljer sig från ai-storage. Här ligger en OpenRouter-nyckel bakom, så server
 | Account ID       | [borttaget]          |
 | Workers-subdomän | treceni.workers.dev                       |
 | Adress           | https://mcp-roundtable.treceni.workers.dev |
+| Workers Builds   | Push till main deployar. Kräver att Cloudflares GitHub-app har tillgång till repot |
 
 Verifierat 2026-10-15 med `wrangler whoami` i ai-storage-containern. Macens wrangler-inloggning i
 `~/Library/Preferences/.wrangler` ser bara detta konto.
