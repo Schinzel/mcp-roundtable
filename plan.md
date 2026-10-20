@@ -9,7 +9,7 @@ Ersätter PAL MCP.
 | Skill som lappar PAL    | ~/.claude/skills/my-skill-pal-models/SKILL.md               |
 | Syskonprojekt, mönster  | ~/code/ai-storage, se DESIGN.md och CLAUDE.md               |
 
-Status: plan, inget implementerat.
+Status: steg 1 klart 2026-10-20. Hello-tool deployat, `claude mcp add` fungerar.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
