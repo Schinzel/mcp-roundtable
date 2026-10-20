@@ -64,7 +64,17 @@ Behålls från PAL:
 Returnerar modellens svar, continuation_id och tokenåtgång. Inget mer.
 
 ## list_models
-Hämtar OpenRouter `/models`, cachad. Returnerar slug, namn och kontextfönster. Filter på text.
+Hämtar OpenRouter `/models` med filter hos OpenRouter. Returnerar slug, namn och kontextfönster. Filter på text.
+
+| Filter          | Värde                                         | Varför                                   |
+|-----------------|-----------------------------------------------|------------------------------------------|
+| `model_authors` | openai, google, anthropic, x-ai, deepseek     | Fast lista i servern                     |
+| `max_age_days`  | 365                                           | Gamla och döda modeller försvinner       |
+| I servern       | Slugs med `:` (`:batch`, `:free`) och `~`     | Varianter och OpenRouters alias          |
+
+Hela listan är 785 KB och 468 modeller. Filtrerad hos OpenRouter blir den 287 KB och 145 modeller,
+varav 82 utan varianter och alias. Uppmätt 2026-10-20. Filtret hålls hos OpenRouter för att spara CPU-tid,
+se Cloudflare-gränser.
 
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
@@ -102,6 +112,12 @@ Skiljer sig från ai-storage. Här ligger en OpenRouter-nyckel bakom, så server
 
 Verifierat 2026-10-15 med `wrangler whoami` i ai-storage-containern. Macens wrangler-inloggning i
 `~/Library/Preferences/.wrangler` ser bara detta konto.
+
+## Cloudflare-gränser, gratisplan
+Bara CPU-tiden är en risk: 10 ms per anrop. Väntan på OpenRouter och D1 räknas inte, men parsning
+och serialisering av JSON gör det. Den blir störst i `list_models` och `files`, som mäts i steg 2 och 5.
+Överskridning ger Error 1102. Nödutgång: Workers Paid, 5 USD/månad, 30 s CPU.
+Övrigt med god marginal: 100k anrop/dygn, 50 subrequests per anrop, D1 500 MB.
 
 # Teknik
 Kopieras från ai-storage, se dess DESIGN.md och CLAUDE.md.
