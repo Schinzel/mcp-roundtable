@@ -18,14 +18,16 @@ Ett andra, tredje och fjärde par ögon när det behövs:
 - När man är beslutstrött
 
 ## Brister i PAL
-PAL MCP har fyra brister som en egen server tar bort:
+PAL MCP har tre brister som en egen server tar bort:
 
 | Brist i PAL                                     | Lösning                                        |
 |-------------------------------------------------|------------------------------------------------|
-| Frusen modellkatalog, döda modeller, saknar nya | Katalog hämtas från OpenRouter `/models`       |
 | Antaget kontextfönster 32k för okända modeller  | `context_length` från samma endpoint           |
 | Brus i svar ("AGENT'S TURN: ...")               | Svaret returneras som det är                   |
 | Exakta OpenRouter-slugs krävs, inga alias       | Fortsatt exakta slugs, medvetet. Inga alias    |
+
+PAL:s modellkatalog var tänkt som en fjärde brist, men 2026-10-20 visade PAL alla aktuella modeller.
+Skillnaden är att `list_models` bara visar aktuella modeller, utan varianter, nyast först.
 
 Behålls från PAL:
 - continuation_id, flera rundor med samma modell och full kontext
@@ -147,7 +149,7 @@ Kopieras från ai-storage, se dess DESIGN.md och CLAUDE.md.
 | Steg | Vad                                                           | Klart när                                          |
 |------|---------------------------------------------------------------|----------------------------------------------------|
 | 1    | Skelett från ai-storage, deploy till Workers, hello-tool      | `claude mcp add` fungerar från Claude Code         |
-| 2    | `list_models` mot OpenRouter                                  | Visar en modell PAL saknar                         |
+| 2    | `list_models` mot OpenRouter                                  | Aktuella modeller, fem företag, utan varianter     |
 | 3    | `chat` utan continuation                                      | Ett svar från Gemini och ett från GPT, parallellt  |
 | 4    | continuation_id med D1                                        | Tre rundor med samma modell, full kontext          |
 | 5    | files med budget från `context_length`                        | Skicka två Java-filer utan att falla               |
