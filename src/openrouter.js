@@ -42,6 +42,6 @@ export async function getModels(cache) {
 /** Hämtar OpenRouters modellkatalog, filtrerad enligt src/core/models.js. Kräver ingen nyckel. */
 async function fetchCatalog() {
   const res = await fetch(modelsUrl());
-  if (!res.ok) throw new Error(`OpenRouter /models svarade ${res.status}`);
+  if (!res.ok) throw new Error(`OpenRouter /models returned ${res.status}`);
   return res.json();
 }

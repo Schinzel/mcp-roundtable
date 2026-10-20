@@ -6,7 +6,7 @@ const schema = (properties, required) =>
   fromJsonSchema({ type: "object", properties, required, additionalProperties: false });
 
 const MISSING_KEY =
-  "Ingen OpenRouter-nyckel i anropet. Lägg till headern Authorization: Bearer sk-or-... i connectorn eller i claude mcp add. Se README.";
+  "No OpenRouter key in the request. Add the header Authorization: Bearer sk-or-... to the connector or to claude mcp add. See README.";
 
 /**
  * @param {{ CACHE: KVNamespace }} env
@@ -20,9 +20,9 @@ export function buildServer(env, key) {
     "list_models",
     {
       description:
-        `Listar modeller på OpenRouter från ${MODEL_AUTHORS.join(", ")}, tillagda de senaste ${MAX_AGE_DAYS} dagarna, nyast först. ` +
-        "Returnerar slug, namn, kontextfönster i tokens och datum då modellen lades till. Använd slug exakt som den står.",
-      inputSchema: schema({ filter: { type: "string", description: "Text som måste finnas i slug eller namn, t.ex. gemini" } }, []),
+        `Lists OpenRouter models from ${MODEL_AUTHORS.join(", ")}, added in the last ${MAX_AGE_DAYS} days, newest first. ` +
+        "Returns slug, name, context window in tokens and the date the model was added. Use the slug exactly as written.",
+      inputSchema: schema({ filter: { type: "string", description: "Text that must appear in the slug or name, e.g. gemini" } }, []),
     },
     guard(async ({ filter }) => ({ models: filterModels(await getModels(env.CACHE), filter) })),
   );
@@ -31,12 +31,12 @@ export function buildServer(env, key) {
     "chat",
     {
       description:
-        "Skickar en prompt till en annan modell via OpenRouter och returnerar svaret som det är, med tokenåtgång. " +
-        "model är en exakt slug från list_models. Modellen ser bara prompten, så ta med all kontext den behöver. " +
-        "Anropa flera modeller parallellt genom att göra flera chat-anrop samtidigt.",
+        "Sends a prompt to another model through OpenRouter and returns its answer as is, with token usage. " +
+        "model is an exact slug from list_models. The model only sees the prompt, so include all the context it needs. " +
+        "To ask several models in parallel, make several chat calls at the same time.",
       inputSchema: schema(
         {
-          model: { type: "string", description: "Exakt OpenRouter-slug, t.ex. openai/gpt-6.1-sol" },
+          model: { type: "string", description: "Exact OpenRouter slug, e.g. openai/gpt-6.1-sol" },
           prompt: { type: "string" },
         },
         ["model", "prompt"],

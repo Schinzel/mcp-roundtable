@@ -15,7 +15,7 @@ export function buildChatRequest(model, prompt) {
 export function parseChatResponse(body) {
   if (body.error) throw new Error(`OpenRouter: ${body.error.message ?? JSON.stringify(body.error)}`);
   const text = body.choices?.[0]?.message?.content;
-  if (typeof text !== "string") throw new Error("OpenRouter svarade utan text");
+  if (typeof text !== "string") throw new Error("OpenRouter returned no text");
   const { prompt_tokens, completion_tokens, cost } = body.usage ?? {};
   return { model: body.model, text, usage: { prompt_tokens, completion_tokens, ...(cost !== undefined && { cost }) } };
 }
@@ -30,5 +30,5 @@ export function chatErrorMessage(status, bodyText) {
   try {
     detail = JSON.parse(bodyText).error?.message ?? detail;
   } catch {}
-  return `OpenRouter svarade ${status}: ${detail}`;
+  return `OpenRouter returned ${status}: ${detail}`;
 }

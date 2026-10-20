@@ -35,18 +35,18 @@ describe("parseChatResponse", () => {
   });
 
   test("svar utan text blir undantag", () => {
-    expect(() => parseChatResponse({ choices: [] })).toThrow("utan text");
+    expect(() => parseChatResponse({ choices: [] })).toThrow("no text");
   });
 });
 
 describe("chatErrorMessage", () => {
   test("använder OpenRouters felmeddelande", () => {
     expect(chatErrorMessage(401, '{"error":{"message":"No auth credentials found"}}')).toBe(
-      "OpenRouter svarade 401: No auth credentials found",
+      "OpenRouter returned 401: No auth credentials found",
     );
   });
 
   test("klarar kropp som inte är JSON", () => {
-    expect(chatErrorMessage(502, "Bad gateway")).toBe("OpenRouter svarade 502: Bad gateway");
+    expect(chatErrorMessage(502, "Bad gateway")).toBe("OpenRouter returned 502: Bad gateway");
   });
 });

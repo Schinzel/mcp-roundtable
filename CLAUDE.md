@@ -10,6 +10,7 @@ Remote MCP-server på Cloudflare Workers som låter Claude ringa upp andra model
 - Pakethanterare: Bun.
 - MCP-bibliotek: `@modelcontextprotocol/server`, createMcpHandler, stateless.
 - Kärnlogik i `src/core/` utan Cloudflare-beroenden, så den kan enhetstestas med `bun test`.
+- Text som modeller och användare läser är på engelska: verktygsbeskrivningar, parametrar, felmeddelanden, README. Kodkommentarer och testnamn på svenska.
 
 ## Kommandon
 - `./start.sh` från Macen: bygger containern vid behov och startar servern på port 8787.

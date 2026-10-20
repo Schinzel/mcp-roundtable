@@ -116,7 +116,7 @@ describe("chat", () => {
     const fetch = mockOpenRouter(200, answer);
     const res = await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" });
     expect(res.isError).toBe(true);
-    expect(res.text).toContain("Ingen OpenRouter-nyckel");
+    expect(res.text).toContain("No OpenRouter key");
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -124,7 +124,7 @@ describe("chat", () => {
     mockOpenRouter(401, { error: { message: "User not found." } });
     const res = await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" }, key);
     expect(res.isError).toBe(true);
-    expect(res.text).toBe("OpenRouter svarade 401: User not found.");
+    expect(res.text).toBe("OpenRouter returned 401: User not found.");
   });
 
   it("list_models fungerar utan nyckel", async () => {
