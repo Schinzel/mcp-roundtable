@@ -35,17 +35,9 @@ Your key passes through this server on every call. It's never stored or logged (
 
 ### 2. Add the server
 
-**Claude Code**
+Pick one of the two options. If you set up both, Claude Code shows every tool twice.
 
-```bash
-claude mcp add --scope user --transport http roundtable \
-  https://mcp-roundtable.treceni.workers.dev/mcp \
-  --header "Authorization: Bearer sk-or-..."
-```
-
-`--scope user` makes it available in every project. Run `claude mcp list` to check that it says Connected.
-
-**claude.ai, Claude Desktop and the mobile apps**
+#### Option 1: connector in claude.ai
 
 Add a custom connector in claude.ai settings:
 
@@ -53,7 +45,17 @@ Add a custom connector in claude.ai settings:
 - Authentication: No sign in
 - Request headers: `Authorization: Bearer sk-or-...`
 
-The connector follows your account to Desktop and mobile. (Not tested yet.)
+You do this once. The connector belongs to your account, so it shows up in claude.ai, Claude Desktop, the mobile apps and Claude Code (when it's logged in with your claude.ai account), on every computer. (Not tested yet whether the header reaches Claude Code. If it doesn't, use option 2 there.)
+
+#### Option 2: Claude Code only
+
+```bash
+claude mcp add --scope user --transport http roundtable \
+  https://mcp-roundtable.treceni.workers.dev/mcp \
+  --header "Authorization: Bearer sk-or-..."
+```
+
+Use this if Claude Code runs on an API key instead of a claude.ai account. It only covers Claude Code on the computer where you run it, so repeat it on each machine. `--scope user` makes it available in every project. Run `claude mcp list` to check that it says Connected.
 
 ## Use
 
