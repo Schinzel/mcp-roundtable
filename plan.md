@@ -80,11 +80,11 @@ se Cloudflare-gränser.
 Den nedbantade listan, cirka 10 KB, cachas i KV i en timme. CPU-tid per anrop, mätt 2026-10-20 via
 GraphQL Analytics (`workersInvocationsAdaptive`):
 
-| Version                   | p50    | p75    | p99     |
-|---------------------------|--------|--------|---------|
-| hello                     | 3,2 ms | 11,6 ms| 25,2 ms |
-| list_models utan cache    | 5,5 ms | 7,8 ms | 26,4 ms |
-| list_models med KV-cache  | 3,3 ms | 4,7 ms | 30,2 ms |
+| Version                  | p50    | p75     | p99     |
+|--------------------------|--------|---------|---------|
+| hello                    | 3,2 ms | 11,6 ms | 25,2 ms |
+| list_models utan cache   | 5,5 ms | 7,8 ms  | 26,4 ms |
+| list_models med KV-cache | 3,3 ms | 4,7 ms  | 30,2 ms |
 
 p99 över 10 ms i alla versioner, även hello. Troligen kallstarter. Inga fel. Dashboardens "Median CPU time"
 visade 16,7 ms för versionen utan cache, men den siffran stämmer inte med GraphQL.
