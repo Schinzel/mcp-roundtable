@@ -77,8 +77,17 @@ Hela listan är 785 KB och 468 modeller. Filtrerad hos OpenRouter blir den 287 K
 varav 82 utan varianter och alias. Uppmätt 2026-10-20. Filtret hålls hos OpenRouter för att spara CPU-tid,
 se Cloudflare-gränser.
 
-Den nedbantade listan, cirka 10 KB, cachas i KV i en timme. Utan cache var medianen 16,7 ms CPU per anrop,
-mätt 2026-10-20. Parsningen av OpenRouters 287 KB kostar cirka 13 ms.
+Den nedbantade listan, cirka 10 KB, cachas i KV i en timme. CPU-tid per anrop, mätt 2026-10-20 via
+GraphQL Analytics (`workersInvocationsAdaptive`):
+
+| Version                   | p50    | p75    | p99     |
+|---------------------------|--------|--------|---------|
+| hello                     | 3,2 ms | 11,6 ms| 25,2 ms |
+| list_models utan cache    | 5,5 ms | 7,8 ms | 26,4 ms |
+| list_models med KV-cache  | 3,3 ms | 4,7 ms | 30,2 ms |
+
+p99 över 10 ms i alla versioner, även hello. Troligen kallstarter. Inga fel. Dashboardens "Median CPU time"
+visade 16,7 ms för versionen utan cache, men den siffran stämmer inte med GraphQL.
 
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
