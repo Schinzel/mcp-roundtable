@@ -8,6 +8,17 @@ describe("buildChatRequest", () => {
       messages: [{ role: "user", content: "Hej" }],
     });
   });
+
+  test("lägger tidigare rundor före prompten", () => {
+    const history = [
+      { role: "user", content: "Fråga" },
+      { role: "assistant", content: "Svar" },
+    ];
+    expect(buildChatRequest("openai/gpt-6.1-sol", "Följdfråga", history).messages).toEqual([
+      ...history,
+      { role: "user", content: "Följdfråga" },
+    ]);
+  });
 });
 
 describe("parseChatResponse", () => {

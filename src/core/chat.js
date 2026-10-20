@@ -1,10 +1,11 @@
 /**
- * Kropp till OpenRouters /chat/completions.
+ * Kropp till OpenRouters /chat/completions. Tidigare rundor går först, så modellen ser hela konversationen.
  * @param {string} model exakt OpenRouter-slug
  * @param {string} prompt
+ * @param {Array<{ role: string, content: string }>} [history]
  */
-export function buildChatRequest(model, prompt) {
-  return { model, messages: [{ role: "user", content: prompt }] };
+export function buildChatRequest(model, prompt, history = []) {
+  return { model, messages: [...history, { role: "user", content: prompt }] };
 }
 
 /**

@@ -6,8 +6,9 @@ import { modelsUrl, trimCatalog } from "./core/models.js";
  * @param {string} key
  * @param {string} model
  * @param {string} prompt
+ * @param {Array<{ role: string, content: string }>} [history] tidigare rundor i konversationen
  */
-export async function chat(key, model, prompt) {
+export async function chat(key, model, prompt, history) {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -16,7 +17,7 @@ export async function chat(key, model, prompt) {
       "http-referer": "https://github.com/Schinzel/mcp-roundtable",
       "x-title": "mcp-roundtable",
     },
-    body: JSON.stringify(buildChatRequest(model, prompt)),
+    body: JSON.stringify(buildChatRequest(model, prompt, history)),
   });
   if (!res.ok) throw new Error(chatErrorMessage(res.status, await res.text()));
   return parseChatResponse(await res.json());

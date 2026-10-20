@@ -1,9 +1,15 @@
-import { cloudflareTest } from "@cloudflare/vitest-pool-workers";
+import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [cloudflareTest({ wrangler: { configPath: "./wrangler.jsonc" } })],
+  plugins: [
+    cloudflareTest(async () => ({
+      wrangler: { configPath: "./wrangler.jsonc" },
+      miniflare: { bindings: { TEST_MIGRATIONS: await readD1Migrations("./migrations") } },
+    })),
+  ],
   test: {
     include: ["test/integration/**/*.test.js"],
+    setupFiles: ["test/integration/setup.js"],
   },
 });

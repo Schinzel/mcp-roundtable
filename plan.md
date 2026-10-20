@@ -11,7 +11,7 @@ Ersätter PAL MCP.
 
 Status: steg 3 klart 2026-10-20. `chat` svarar från Gemini och GPT via claude.ai-connectorn, så `Authorization`
 i Request headers når servern. Utan nyckel ger isError. `chat` drar 18–56 ms CPU på grund av kallstarter, se Cloudflare-gränser.
-Nästa: steg 4.
+Steg 4 deployat 2026-10-20, continuation_id med D1. Nästa: steg 5.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -126,7 +126,9 @@ Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör run
 # Lagring
 KV, binding `CACHE`: modellistan för `list_models`, en timme.
 
-D1. Konversationer för continuation_id.
+D1, binding `DB`, databas `mcp-roundtable` (550def2c-7fac-4494-b862-66473b5d5f13). Konversationer för continuation_id.
+Migrationer i `migrations/`, körs med `wrangler d1 migrations apply mcp-roundtable --remote` före push.
+En runda sparas först när modellen har svarat. Annan modell än konversationens ger isError.
 
 | Tabell       | Kolumner                                    |
 |--------------|---------------------------------------------|

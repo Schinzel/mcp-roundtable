@@ -4,6 +4,14 @@
   "main": "src/index.js",
   "compatibility_date": "2026-08-22",
   "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mcp-roundtable",
+      "database_id": "550def2c-7fac-4494-b862-66473b5d5f13",
+      "migrations_dir": "migrations"
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "CACHE",

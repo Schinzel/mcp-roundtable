@@ -4,7 +4,7 @@ import { createHandler } from "./mcp.js";
 export default {
   /**
    * @param {Request} request
-   * @param {{ CACHE: KVNamespace }} env
+   * @param {{ CACHE: KVNamespace, DB: D1Database }} env
    */
   async fetch(request, env) {
     const url = new URL(request.url);

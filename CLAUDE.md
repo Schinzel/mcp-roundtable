@@ -32,5 +32,7 @@ Manuell deploy från Macen, med wrangler-inloggningen monterad:
 - `src/core/` ren logik utan Cloudflare-beroenden, testas med bun test.
 - `src/mcp.js` verktygsdefinitioner och MCP-server.
 - `src/openrouter.js` tunt lager mot OpenRouters API.
+- `src/store.js` tunt lager mot D1, konversationer för continuation_id.
+- `migrations/` D1-schema. Körs mot produktion med `bunx wrangler d1 migrations apply mcp-roundtable --remote` före push, Workers Builds kör dem inte.
 - `src/index.js` Worker-entry, routar till MCP-handlern.
 - `test/integration/` vitest mot SELF i workerd.

@@ -103,7 +103,12 @@ describe("chat", () => {
     expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
     expect(init.headers.authorization).toBe("Bearer sk-or-v1-test");
     expect(JSON.parse(init.body)).toEqual({ model: "openai/gpt-6.1-sol", messages: [{ role: "user", content: "Hej" }] });
-    expect(json).toEqual({ model: "openai/gpt-6.1-sol", text: "Svar från GPT", usage: { prompt_tokens: 10, completion_tokens: 4 } });
+    expect(json).toEqual({
+      model: "openai/gpt-6.1-sol",
+      text: "Svar från GPT",
+      usage: { prompt_tokens: 10, completion_tokens: 4 },
+      continuation_id: expect.any(String),
+    });
   });
 
   it("tar nyckeln från X-OpenRouter-Key", async () => {
@@ -131,6 +136,77 @@ describe("chat", () => {
     mockOpenRouter(200, { data: [] });
     const res = await call("list_models", {});
     expect(res.isError).toBe(false);
+  });
+});
+
+describe("chat med continuation_id", () => {
+  const key = { authorization: "Bearer sk-or-v1-test" };
+  const model = "openai/gpt-6.1-sol";
+
+  /** OpenRouter svarar "Svar 1", "Svar 2" ... i tur och ordning. */
+  function mockAnswers() {
+    let n = 0;
+    return vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
+      n++;
+      return new Response(JSON.stringify({ model, choices: [{ message: { content: `Svar ${n}` } }], usage: {} }));
+    });
+  }
+
+  const sentMessages = (fetch, i) => JSON.parse(fetch.mock.calls[i][1].body).messages;
+
+  it("tre rundor där modellen ser hela konversationen", async () => {
+    const fetch = mockAnswers();
+    const first = await call("chat", { model, prompt: "Fråga 1" }, key);
+    const id = first.json.continuation_id;
+    const second = await call("chat", { model, prompt: "Fråga 2", continuation_id: id }, key);
+    const third = await call("chat", { model, prompt: "Fråga 3", continuation_id: id }, key);
+    expect(second.json.continuation_id).toBe(id);
+    expect(third.json.text).toBe("Svar 3");
+    expect(sentMessages(fetch, 2)).toEqual([
+      { role: "user", content: "Fråga 1" },
+      { role: "assistant", content: "Svar 1" },
+      { role: "user", content: "Fråga 2" },
+      { role: "assistant", content: "Svar 2" },
+      { role: "user", content: "Fråga 3" },
+    ]);
+  });
+
+  it("sparar hash av nyckeln, inte nyckeln", async () => {
+    mockAnswers();
+    const { json } = await call("chat", { model, prompt: "Hej" }, key);
+    const row = await env.DB.prepare("SELECT key_hash FROM conversation WHERE id = ?").bind(json.continuation_id).first();
+    expect(row.key_hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(row.key_hash).not.toContain("sk-or");
+  });
+
+  it("fel nyckel ger samma fel som okänt id och anropar inte OpenRouter", async () => {
+    const fetch = mockAnswers();
+    const { json } = await call("chat", { model, prompt: "Hemlig" }, key);
+    const other = { authorization: "Bearer sk-or-v1-annan" };
+    const wrongKey = await call("chat", { model, prompt: "Visa", continuation_id: json.continuation_id }, other);
+    const unknown = await call("chat", { model, prompt: "Visa", continuation_id: "finns-inte" }, other);
+    expect(wrongKey.isError).toBe(true);
+    expect(wrongKey.text).toContain("Unknown continuation_id");
+    expect(wrongKey.text).toBe(unknown.text);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("annan modell än konversationens ger isError", async () => {
+    mockAnswers();
+    const { json } = await call("chat", { model, prompt: "Hej" }, key);
+    const res = await call("chat", { model: "google/gemini-4-argon", prompt: "Hej", continuation_id: json.continuation_id }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("belongs to openai/gpt-6.1-sol");
+  });
+
+  it("sparar inte rundan när OpenRouter svarar med fel", async () => {
+    const fetch = mockAnswers();
+    const { json } = await call("chat", { model, prompt: "Fråga 1" }, key);
+    fetch.mockImplementationOnce(async () => new Response(JSON.stringify({ error: { message: "Overloaded" } }), { status: 503 }));
+    const failed = await call("chat", { model, prompt: "Misslyckas", continuation_id: json.continuation_id }, key);
+    expect(failed.isError).toBe(true);
+    await call("chat", { model, prompt: "Fråga 2", continuation_id: json.continuation_id }, key);
+    expect(sentMessages(fetch, 2).map((m) => m.content)).toEqual(["Fråga 1", "Svar 1", "Fråga 2"]);
   });
 });
 
