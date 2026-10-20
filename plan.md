@@ -11,7 +11,8 @@ Ersätter PAL MCP.
 
 Status: steg 3 klart 2026-10-20. `chat` svarar från Gemini och GPT via claude.ai-connectorn, så `Authorization`
 i Request headers når servern. Utan nyckel ger isError. `chat` drar 18–56 ms CPU på grund av kallstarter, se Cloudflare-gränser.
-Steg 4 deployat 2026-10-20, continuation_id med D1. Nästa: steg 5.
+Steg 4 klart 2026-10-20: tre rundor med Gemini via claude.ai med full kontext, fel nyckel och annan modell
+nekas. `chat` med D1 22–45 ms CPU, inga fel. Nästa: steg 5.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
