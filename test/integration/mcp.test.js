@@ -1,5 +1,5 @@
-import { SELF } from "cloudflare:test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { env, SELF } from "cloudflare:test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const headers = { "content-type": "application/json", accept: "application/json, text/event-stream" };
 let nextId = 1;
@@ -25,6 +25,7 @@ function mockOpenRouter(status, body) {
   return vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(JSON.stringify(body), { status }));
 }
 
+beforeEach(() => env.CACHE.delete("models"));
 afterEach(() => vi.restoreAllMocks());
 
 describe("MCP", () => {
@@ -68,6 +69,14 @@ describe("list_models", () => {
   it("filtrerar på text", async () => {
     mockOpenRouter(200, catalog);
     const { json } = await call("list_models", { filter: "gemini" });
+    expect(json.models.map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
+  });
+
+  it("hämtar från cachen vid andra anropet", async () => {
+    const fetch = mockOpenRouter(200, catalog);
+    await call("list_models", {});
+    const { json } = await call("list_models", { filter: "gemini" });
+    expect(fetch).toHaveBeenCalledTimes(1);
     expect(json.models.map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
   });
 

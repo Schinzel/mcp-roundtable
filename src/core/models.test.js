@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { modelsUrl, toModelList } from "./models.js";
+import { filterModels, modelsUrl, trimCatalog } from "./models.js";
 
 const model = (id, name, created = 1792225624) => ({ id, name, context_length: 1000, created });
 
@@ -13,7 +13,7 @@ describe("modelsUrl", () => {
   });
 });
 
-describe("toModelList", () => {
+describe("trimCatalog", () => {
   const catalog = {
     data: [
       model("openai/gpt-6.1-sol", "OpenAI: GPT-6.1 Sol"),
@@ -24,21 +24,32 @@ describe("toModelList", () => {
   };
 
   test("tar bort varianter och alias", () => {
-    expect(toModelList(catalog).map((m) => m.slug)).toEqual(["openai/gpt-6.1-sol", "google/gemini-4-argon"]);
+    expect(trimCatalog(catalog).map((m) => m.slug)).toEqual(["openai/gpt-6.1-sol", "google/gemini-4-argon"]);
   });
 
   test("returnerar slug, namn, kontextfönster och datum", () => {
-    expect(toModelList(catalog)[0]).toEqual({
+    expect(trimCatalog(catalog)[0]).toEqual({
       slug: "openai/gpt-6.1-sol",
       name: "OpenAI: GPT-6.1 Sol",
       context_length: 1000,
       added: "2026-10-17",
     });
   });
+});
+
+describe("filterModels", () => {
+  const models = [
+    { slug: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol" },
+    { slug: "google/gemini-4-argon", name: "Google: Gemini 4 Argon" },
+  ];
 
   test("filtrerar på slug och namn utan hänsyn till skiftläge", () => {
-    expect(toModelList(catalog, "GEMINI").map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
-    expect(toModelList(catalog, "argon").map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
-    expect(toModelList(catalog, "  ")).toHaveLength(2);
+    expect(filterModels(models, "GEMINI").map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
+    expect(filterModels(models, "argon").map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
+  });
+
+  test("tomt filter ger alla", () => {
+    expect(filterModels(models, "  ")).toHaveLength(2);
+    expect(filterModels(models)).toHaveLength(2);
   });
 });

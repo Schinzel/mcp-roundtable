@@ -1,12 +1,12 @@
 import { createMcpHandler, fromJsonSchema, McpServer } from "@modelcontextprotocol/server";
-import { MAX_AGE_DAYS, MODEL_AUTHORS, toModelList } from "./core/models.js";
-import { fetchModels } from "./openrouter.js";
+import { filterModels, MAX_AGE_DAYS, MODEL_AUTHORS } from "./core/models.js";
+import { getModels } from "./openrouter.js";
 
 const schema = (properties, required) =>
   fromJsonSchema({ type: "object", properties, required, additionalProperties: false });
 
 /**
- * @param {object} env
+ * @param {{ CACHE: KVNamespace }} env
  * @returns {McpServer}
  */
 export function buildServer(env) {
@@ -20,13 +20,13 @@ export function buildServer(env) {
         "Returnerar slug, namn, kontextfönster i tokens och datum då modellen lades till. Använd slug exakt som den står.",
       inputSchema: schema({ filter: { type: "string", description: "Text som måste finnas i slug eller namn, t.ex. gemini" } }, []),
     },
-    guard(async ({ filter }) => ({ models: toModelList(await fetchModels(), filter) })),
+    guard(async ({ filter }) => ({ models: filterModels(await getModels(env.CACHE), filter) })),
   );
 
   return server;
 }
 
-/** @param {object} env */
+/** @param {{ CACHE: KVNamespace }} env */
 export function createHandler(env) {
   return createMcpHandler(() => buildServer(env));
 }

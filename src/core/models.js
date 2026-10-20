@@ -16,21 +16,28 @@ export function modelsUrl() {
 }
 
 /**
- * Bantar ned OpenRouters svar till det list_models returnerar.
+ * Bantar ned OpenRouters svar till det list_models returnerar. Resultatet är det som cachas.
  * Varianter som `:batch` och `:free` och OpenRouters alias med `~` tas bort.
  * @param {{ data: Array<{ id: string, name: string, context_length: number, created: number }> }} catalog
- * @param {string} [filter] text som måste finnas i slug eller namn, skiftlägesokänsligt
  * @returns {Array<{ slug: string, name: string, context_length: number, added: string }>}
  */
-export function toModelList(catalog, filter) {
-  const needle = filter?.trim().toLowerCase();
+export function trimCatalog(catalog) {
   return catalog.data
     .filter((m) => !m.id.includes(":") && !m.id.startsWith("~"))
-    .filter((m) => !needle || m.id.toLowerCase().includes(needle) || m.name.toLowerCase().includes(needle))
     .map((m) => ({
       slug: m.id,
       name: m.name,
       context_length: m.context_length,
       added: new Date(m.created * 1000).toISOString().slice(0, 10),
     }));
+}
+
+/**
+ * @param {Array<{ slug: string, name: string }>} models
+ * @param {string} [filter] text som måste finnas i slug eller namn, skiftlägesokänsligt
+ */
+export function filterModels(models, filter) {
+  const needle = filter?.trim().toLowerCase();
+  if (!needle) return models;
+  return models.filter((m) => m.slug.toLowerCase().includes(needle) || m.name.toLowerCase().includes(needle));
 }

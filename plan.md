@@ -77,6 +77,9 @@ Hela listan är 785 KB och 468 modeller. Filtrerad hos OpenRouter blir den 287 K
 varav 82 utan varianter och alias. Uppmätt 2026-10-20. Filtret hålls hos OpenRouter för att spara CPU-tid,
 se Cloudflare-gränser.
 
+Den nedbantade listan, cirka 10 KB, cachas i KV i en timme. Utan cache var medianen 16,7 ms CPU per anrop,
+mätt 2026-10-20. Parsningen av OpenRouters 287 KB kostar cirka 13 ms.
+
 # MCP prompts
 Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör rundorna med `chat`.
 
@@ -89,6 +92,8 @@ Diskussionsupplägg. Ren text i egna filer. Claude hämtar prompten och kör run
 Öppet: om Claude Code kan plocka MCP-prompts själv från löpande text, eller om de bara nås via slash-kommando. Testas när servern finns.
 
 # Lagring
+KV, binding `CACHE`: modellistan för `list_models`, en timme.
+
 D1. Konversationer för continuation_id.
 
 | Tabell       | Kolumner                                              |
