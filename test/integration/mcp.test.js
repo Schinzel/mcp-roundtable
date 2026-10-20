@@ -26,6 +26,13 @@ function mockOpenRouter(status, body) {
 }
 
 beforeEach(() => env.CACHE.delete("models"));
+
+/** Lägger modellistan i KV, så chat inte hämtar /models och fetch bara ser OpenRouters chat-anrop. */
+const seedModels = () =>
+  env.CACHE.put(
+    "models",
+    JSON.stringify([{ slug: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol", context_length: 1000, added: "2026-10-15" }]),
+  );
 afterEach(() => vi.restoreAllMocks());
 
 describe("MCP", () => {
@@ -89,6 +96,7 @@ describe("list_models", () => {
 });
 
 describe("chat", () => {
+  beforeEach(seedModels);
   const key = { authorization: "Bearer sk-or-v1-test" };
   const answer = {
     model: "openai/gpt-6.1-sol",
@@ -140,6 +148,7 @@ describe("chat", () => {
 });
 
 describe("chat med continuation_id", () => {
+  beforeEach(seedModels);
   const key = { authorization: "Bearer sk-or-v1-test" };
   const model = "openai/gpt-6.1-sol";
 
@@ -207,6 +216,50 @@ describe("chat med continuation_id", () => {
     expect(failed.isError).toBe(true);
     await call("chat", { model, prompt: "Fråga 2", continuation_id: json.continuation_id }, key);
     expect(sentMessages(fetch, 2).map((m) => m.content)).toEqual(["Fråga 1", "Svar 1", "Fråga 2"]);
+  });
+});
+
+describe("chat med files", () => {
+  beforeEach(seedModels);
+  const key = { authorization: "Bearer sk-or-v1-test" };
+  const model = "openai/gpt-6.1-sol";
+  const answer = { model, choices: [{ message: { content: "Svar" } }], usage: {} };
+  const files = [
+    { path: "src/A.java", content: "class A {}" },
+    { path: "src/B.java", content: "class B {}" },
+  ];
+  const withFiles = '<file path="src/A.java">\nclass A {}\n</file>\n\n<file path="src/B.java">\nclass B {}\n</file>\n\nGranska';
+
+  it("skickar filerna före prompten och sparar dem i historiken", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    const { json } = await call("chat", { model, prompt: "Granska", files }, key);
+    await call("chat", { model, prompt: "Och nu?", continuation_id: json.continuation_id }, key);
+    expect(JSON.parse(fetch.mock.calls[0][1].body).messages).toEqual([{ role: "user", content: withFiles }]);
+    expect(JSON.parse(fetch.mock.calls[1][1].body).messages.map((m) => m.content)).toEqual([withFiles, "Svar", "Och nu?"]);
+  });
+
+  it("för stort ger isError med siffror och anropar inte OpenRouter", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    const res = await call("chat", { model, prompt: "Granska", files: [{ path: "Big.java", content: "x".repeat(4000) }] }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("Too large for openai/gpt-6.1-sol: about 1,0");
+    expect(res.text).toContain("limit 750 (75% of the 1,000 token context window)");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("historiken räknas in i budgeten", async () => {
+    mockOpenRouter(200, answer);
+    const { json } = await call("chat", { model, prompt: "Granska", files: [{ path: "A.java", content: "x".repeat(2000) }] }, key);
+    const res = await call("chat", { model, prompt: "Mer", continuation_id: json.continuation_id, files: [{ path: "B.java", content: "y".repeat(1000) }] }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("leave continuation_id out");
+  });
+
+  it("modell utanför katalogen skickas utan budget", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    const res = await call("chat", { model: "openai/gpt-4o:free", prompt: "Granska", files: [{ path: "Big.java", content: "x".repeat(4000) }] }, key);
+    expect(res.isError).toBe(false);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });
 

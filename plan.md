@@ -68,6 +68,18 @@ Behålls från PAL:
 
 Returnerar modellens svar, continuation_id och tokenåtgång. Inget mer.
 
+### files
+Beslutat 2026-10-20. Servern kan inte läsa lokala filer, så Claude skickar `[{ path, content }]`.
+- Filerna läggs före prompten, var och en som `<file path="...">...</file>`. Taggar går inte sönder av ``` i innehållet,
+  och frågan sist är det modellerna rekommenderar för lång kontext.
+- Prompten med filerna sparas som användarmeddelandet i D1. Filerna följer med i historiken, ingen egen tabell.
+  Samma fil skickad två gånger kostar dubbelt. Egen tabell där nyaste versionen ersätter, som i PAL, om det blir ett problem.
+- Budget: historik + filer + prompt, tecken/4, högst 75 % av `context_length`. Resten täcker svaret och att kod ger
+  fler tokens per tecken. För stort ger isError med siffror per del, utan anrop till OpenRouter.
+- `context_length` från KV-cachade modellistan. Modell utanför listan (äldre än 365 dagar, `:free`) eller fel från
+  `/models`: budgeten hoppas över och OpenRouter avgör.
+- Högst 1 000 000 tecken per runda oavsett modell, eftersom D1 tillåter 2 MB per rad.
+
 ## list_models
 Hämtar OpenRouter `/models` med filter hos OpenRouter, nyast först. Returnerar slug, namn, kontextfönster och datum då
 modellen lades till. Filter på text i slug eller namn.
