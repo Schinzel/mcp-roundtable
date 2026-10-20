@@ -4,18 +4,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const headers = { "content-type": "application/json", accept: "application/json, text/event-stream" };
 let nextId = 1;
 
-async function rpc(method, params = {}) {
+async function rpc(method, params = {}, extraHeaders = {}) {
   const res = await SELF.fetch("http://example.com/mcp", {
     method: "POST",
-    headers,
+    headers: { ...headers, ...extraHeaders },
     body: JSON.stringify({ jsonrpc: "2.0", id: nextId++, method, params }),
   });
   expect(res.status).toBe(200);
   return parse(res);
 }
 
-async function call(name, args) {
-  const body = await rpc("tools/call", { name, arguments: args });
+async function call(name, args, extraHeaders) {
+  const body = await rpc("tools/call", { name, arguments: args }, extraHeaders);
   const text = body.result.content[0].text;
   return { isError: body.result.isError ?? false, text, json: body.result.isError ? null : JSON.parse(text) };
 }
@@ -40,7 +40,7 @@ describe("MCP", () => {
 
   it("listar verktygen", async () => {
     const body = await rpc("tools/list");
-    expect(body.result.tools.map((t) => t.name)).toEqual(["list_models"]);
+    expect(body.result.tools.map((t) => t.name).sort()).toEqual(["chat", "list_models"]);
   });
 
   it("andra sökvägar ger 404", async () => {
@@ -85,6 +85,52 @@ describe("list_models", () => {
     const res = await call("list_models", {});
     expect(res.isError).toBe(true);
     expect(res.text).toContain("503");
+  });
+});
+
+describe("chat", () => {
+  const key = { authorization: "Bearer sk-or-v1-test" };
+  const answer = {
+    model: "openai/gpt-6.1-sol",
+    choices: [{ message: { role: "assistant", content: "Svar från GPT" } }],
+    usage: { prompt_tokens: 10, completion_tokens: 4 },
+  };
+
+  it("skickar prompten med användarens nyckel och returnerar svaret", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    const { json } = await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" }, key);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(init.headers.authorization).toBe("Bearer sk-or-v1-test");
+    expect(JSON.parse(init.body)).toEqual({ model: "openai/gpt-6.1-sol", messages: [{ role: "user", content: "Hej" }] });
+    expect(json).toEqual({ model: "openai/gpt-6.1-sol", text: "Svar från GPT", usage: { prompt_tokens: 10, completion_tokens: 4 } });
+  });
+
+  it("tar nyckeln från X-OpenRouter-Key", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" }, { "x-openrouter-key": "sk-or-v1-x" });
+    expect(fetch.mock.calls[0][1].headers.authorization).toBe("Bearer sk-or-v1-x");
+  });
+
+  it("ger isError utan nyckel och anropar inte OpenRouter", async () => {
+    const fetch = mockOpenRouter(200, answer);
+    const res = await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" });
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("Ingen OpenRouter-nyckel");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("ger isError med OpenRouters felmeddelande", async () => {
+    mockOpenRouter(401, { error: { message: "User not found." } });
+    const res = await call("chat", { model: "openai/gpt-6.1-sol", prompt: "Hej" }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toBe("OpenRouter svarade 401: User not found.");
+  });
+
+  it("list_models fungerar utan nyckel", async () => {
+    mockOpenRouter(200, { data: [] });
+    const res = await call("list_models", {});
+    expect(res.isError).toBe(false);
   });
 });
 

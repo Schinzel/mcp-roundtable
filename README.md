@@ -6,16 +6,16 @@ Use it when you want a second, third or fourth opinion: a hard problem where get
 
 Runs on Cloudflare Workers. You bring your own OpenRouter key.
 
-> **Status:** early. `list_models` works. `chat` and the discussion prompts are being built. See [plan.md](plan.md).
+> **Status:** early. `list_models` and `chat` work. Follow-up rounds and the discussion prompts are being built. See [plan.md](plan.md).
 
 ## What it does
 
 The server is deliberately small. It gives Claude one way to talk to another model, and Claude runs the discussion itself.
 
-| Tool          | What it does                                                                                       |
-|---------------|----------------------------------------------------------------------------------------------------|
-| `list_models` | Current models from OpenAI, Google, Anthropic, xAI and DeepSeek, newest first, with context size   |
-| `chat`        | Sends a prompt to one model. Pass `continuation_id` to keep talking with the same model *(coming)* |
+| Tool          | What it does                                                                                                           |
+|---------------|------------------------------------------------------------------------------------------------------------------------|
+| `list_models` | Current models from OpenAI, Google, Anthropic, xAI and DeepSeek, newest first, with context size                       |
+| `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. `continuation_id` for follow-ups is coming |
 
 | Prompt      | Setup *(coming)*                                          |
 |-------------|-----------------------------------------------------------|

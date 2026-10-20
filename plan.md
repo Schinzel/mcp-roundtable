@@ -9,7 +9,7 @@ Ersätter PAL MCP.
 | Skill som lappar PAL   | ~/.claude/skills/my-skill-pal-models/SKILL.md        |
 | Syskonprojekt, mönster | ~/code/ai-storage, se DESIGN.md och CLAUDE.md        |
 
-Status: steg 2 klart 2026-10-20. `list_models` deployat, nås via claude.ai-connector.
+Status: steg 3 deployat 2026-10-20, väntar på test med nyckel. `list_models` deployat, nås via claude.ai-connector.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -115,7 +115,8 @@ D1. Konversationer för continuation_id.
 # Auth
 Var och en använder sin egen OpenRouter-nyckel. Servern har ingen egen nyckel och ingen egen token.
 - Nyckeln skickas i `Authorization: Bearer sk-or-...` i varje anrop och går vidare till OpenRouter.
-- `chat` utan nyckel ger 401. `list_models` kräver ingen nyckel.
+- `chat` utan nyckel ger isError med instruktion, inte HTTP 401. En 401 på MCP-anropet stoppar även
+  `list_models`, och claude.ai tolkar 401 som att servern kräver OAuth. `list_models` kräver ingen nyckel.
 - Nyckeln sparas aldrig. D1 sparar SHA-256 av nyckeln i `conversation.key_hash`. Ett continuation_id
   med fel nyckel ger samma fel som ett okänt id, så andras konversationer går inte att läsa.
 - Workers-loggar avstängda. Nyckeln loggas inte.
@@ -159,18 +160,18 @@ Kopieras från ai-storage, se dess DESIGN.md och CLAUDE.md.
 
 # Steg
 
-| Steg | Vad                                                      | Klart när                                            |
-|------|----------------------------------------------------------|------------------------------------------------------|
-| 1    | Skelett från ai-storage, deploy till Workers, hello-tool | `claude mcp add` fungerar från Claude Code           |
-| 2    | `list_models` mot OpenRouter                             | Aktuella modeller, fem företag, utan varianter       |
-| 3    | `chat` utan continuation, nyckel från header             | Svar från Gemini och GPT parallellt. Utan nyckel 401 |
-| 4    | continuation_id med D1 och key_hash                      | Tre rundor, full kontext. Fel nyckel nekas           |
-| 5    | files med budget från `context_length`                   | Skicka två Java-filer utan att falla                 |
-| 6    | thinking och temperature                                 |                                                      |
-| 7    | Connector i claude.ai med Request headers                | En chat från claude.ai                               |
-| 8    | Prompts consensus, tenth_man, critic                     | En konsensusdiskussion körd end to end               |
-| 9    | README som säljer konceptet, gif                         |                                                      |
-| 10   | Ta bort PAL och my-skill-pal-models                      |                                                      |
+| Steg | Vad                                                      | Klart när                                                |
+|------|----------------------------------------------------------|----------------------------------------------------------|
+| 1    | Skelett från ai-storage, deploy till Workers, hello-tool | `claude mcp add` fungerar från Claude Code               |
+| 2    | `list_models` mot OpenRouter                             | Aktuella modeller, fem företag, utan varianter           |
+| 3    | `chat` utan continuation, nyckel från header             | Svar från Gemini och GPT parallellt. Utan nyckel isError |
+| 4    | continuation_id med D1 och key_hash                      | Tre rundor, full kontext. Fel nyckel nekas               |
+| 5    | files med budget från `context_length`                   | Skicka två Java-filer utan att falla                     |
+| 6    | thinking och temperature                                 |                                                          |
+| 7    | Connector i claude.ai med Request headers                | En chat från claude.ai                                   |
+| 8    | Prompts consensus, tenth_man, critic                     | En konsensusdiskussion körd end to end                   |
+| 9    | README som säljer konceptet, gif                         |                                                          |
+| 10   | Ta bort PAL och my-skill-pal-models                      |                                                          |
 
 # Senare, inte nu
 - Remote tool `discuss` som kör ett helt upplägg i servern
