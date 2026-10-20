@@ -1,5 +1,5 @@
 import { SELF } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const headers = { "content-type": "application/json", accept: "application/json, text/event-stream" };
 let nextId = 1;
@@ -14,6 +14,19 @@ async function rpc(method, params = {}) {
   return parse(res);
 }
 
+async function call(name, args) {
+  const body = await rpc("tools/call", { name, arguments: args });
+  const text = body.result.content[0].text;
+  return { isError: body.result.isError ?? false, text, json: body.result.isError ? null : JSON.parse(text) };
+}
+
+/** Låter OpenRouter svara med given status och kropp. Svaret skapas per anrop, Workers delar inte I/O mellan requests. */
+function mockOpenRouter(status, body) {
+  return vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(JSON.stringify(body), { status }));
+}
+
+afterEach(() => vi.restoreAllMocks());
+
 describe("MCP", () => {
   it("svarar på initialize", async () => {
     const body = await rpc("initialize", {
@@ -26,17 +39,43 @@ describe("MCP", () => {
 
   it("listar verktygen", async () => {
     const body = await rpc("tools/list");
-    expect(body.result.tools.map((t) => t.name)).toEqual(["hello"]);
-  });
-
-  it("hello svarar", async () => {
-    const body = await rpc("tools/call", { name: "hello", arguments: { name: "Henrik" } });
-    expect(JSON.parse(body.result.content[0].text)).toEqual({ text: "Hej Henrik, roundtable svarar." });
+    expect(body.result.tools.map((t) => t.name)).toEqual(["list_models"]);
   });
 
   it("andra sökvägar ger 404", async () => {
     const res = await SELF.fetch("http://example.com/annat");
     expect(res.status).toBe(404);
+  });
+});
+
+describe("list_models", () => {
+  const catalog = {
+    data: [
+      { id: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol", context_length: 400000, created: 1792225624 },
+      { id: "openai/gpt-6.1-sol:batch", name: "OpenAI: GPT-6.1 Sol (batch)", context_length: 400000, created: 1792225624 },
+      { id: "google/gemini-4-argon", name: "Google: Gemini 4 Argon", context_length: 1048576, created: 1792225624 },
+    ],
+  };
+
+  it("frågar OpenRouter med filter och returnerar nedbantad lista", async () => {
+    const fetch = mockOpenRouter(200, catalog);
+    const { json } = await call("list_models", {});
+    expect(fetch.mock.calls[0][0]).toContain("model_authors=openai%2Cgoogle%2Canthropic%2Cx-ai%2Cdeepseek");
+    expect(json.models.map((m) => m.slug)).toEqual(["openai/gpt-6.1-sol", "google/gemini-4-argon"]);
+    expect(json.models[1].context_length).toBe(1048576);
+  });
+
+  it("filtrerar på text", async () => {
+    mockOpenRouter(200, catalog);
+    const { json } = await call("list_models", { filter: "gemini" });
+    expect(json.models.map((m) => m.slug)).toEqual(["google/gemini-4-argon"]);
+  });
+
+  it("ger isError när OpenRouter svarar med fel", async () => {
+    mockOpenRouter(503, {});
+    const res = await call("list_models", {});
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("503");
   });
 });
 

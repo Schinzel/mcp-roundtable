@@ -9,7 +9,7 @@ Ersätter PAL MCP.
 | Skill som lappar PAL    | ~/.claude/skills/my-skill-pal-models/SKILL.md               |
 | Syskonprojekt, mönster  | ~/code/ai-storage, se DESIGN.md och CLAUDE.md               |
 
-Status: steg 1 klart 2026-10-20. Hello-tool deployat, `claude mcp add` fungerar.
+Status: steg 2 klart 2026-10-20. `list_models` deployat, `claude mcp add` fungerar.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -64,7 +64,8 @@ Behålls från PAL:
 Returnerar modellens svar, continuation_id och tokenåtgång. Inget mer.
 
 ## list_models
-Hämtar OpenRouter `/models` med filter hos OpenRouter. Returnerar slug, namn och kontextfönster. Filter på text.
+Hämtar OpenRouter `/models` med filter hos OpenRouter, nyast först. Returnerar slug, namn, kontextfönster och datum då
+modellen lades till. Filter på text i slug eller namn.
 
 | Filter          | Värde                                         | Varför                                   |
 |-----------------|-----------------------------------------------|------------------------------------------|

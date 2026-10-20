@@ -1,5 +1,6 @@
 import { createMcpHandler, fromJsonSchema, McpServer } from "@modelcontextprotocol/server";
-import { greeting } from "./core/hello.js";
+import { MAX_AGE_DAYS, MODEL_AUTHORS, toModelList } from "./core/models.js";
+import { fetchModels } from "./openrouter.js";
 
 const schema = (properties, required) =>
   fromJsonSchema({ type: "object", properties, required, additionalProperties: false });
@@ -12,12 +13,14 @@ export function buildServer(env) {
   const server = new McpServer({ name: "roundtable", version: "0.1.0" });
 
   server.registerTool(
-    "hello",
+    "list_models",
     {
-      description: "Testverktyg. Returnerar en hälsning för att visa att servern svarar.",
-      inputSchema: schema({ name: { type: "string" } }, []),
+      description:
+        `Listar modeller på OpenRouter från ${MODEL_AUTHORS.join(", ")}, tillagda de senaste ${MAX_AGE_DAYS} dagarna, nyast först. ` +
+        "Returnerar slug, namn, kontextfönster i tokens och datum då modellen lades till. Använd slug exakt som den står.",
+      inputSchema: schema({ filter: { type: "string", description: "Text som måste finnas i slug eller namn, t.ex. gemini" } }, []),
     },
-    guard(async ({ name }) => ({ text: greeting(name) })),
+    guard(async ({ filter }) => ({ models: toModelList(await fetchModels(), filter) })),
   );
 
   return server;

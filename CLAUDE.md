@@ -30,5 +30,6 @@ Manuell deploy från Macen, med wrangler-inloggningen monterad:
 ## Struktur
 - `src/core/` ren logik utan Cloudflare-beroenden, testas med bun test.
 - `src/mcp.js` verktygsdefinitioner och MCP-server.
+- `src/openrouter.js` tunt lager mot OpenRouters API.
 - `src/index.js` Worker-entry, routar till MCP-handlern.
 - `test/integration/` vitest mot SELF i workerd.
