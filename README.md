@@ -35,7 +35,7 @@ Your key passes through this server on every call. It's never stored or logged (
 
 ### 2. Add the server
 
-Pick one of the two options. If you set up both, Claude Code shows every tool twice.
+Pick one of the two options. If you set up both, Claude Code uses option 2 and hides the claude.ai connector, since they have the same URL.
 
 #### Option 1: connector in claude.ai
 
