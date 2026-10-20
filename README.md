@@ -48,6 +48,8 @@ Add a custom connector in claude.ai settings:
   - Value: `Bearer ` followed by your OpenRouter key, for example `Bearer sk-or-v1-abc123...`
     (the word Bearer, a space, then the whole key)
 
+claude.ai caches the server's tool list. When the server gets new tools, open the connector and click refresh tool list, then start a new chat or Claude Code session.
+
 You do this once. The connector belongs to your account, so it shows up in claude.ai, Claude Desktop, the mobile apps and Claude Code (when it's logged in with your claude.ai account), on every computer. (Not tested yet whether the header reaches Claude Code. If it doesn't, use option 2 there.)
 
 #### Option 2: Claude Code only
