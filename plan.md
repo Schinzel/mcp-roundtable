@@ -9,7 +9,7 @@ Ersätter PAL MCP.
 | Skill som lappar PAL   | ~/.claude/skills/my-skill-pal-models/SKILL.md        |
 | Syskonprojekt, mönster | ~/code/ai-storage, se DESIGN.md och CLAUDE.md        |
 
-Status: steg 2 klart 2026-10-20. `list_models` deployat, `claude mcp add` fungerar.
+Status: steg 2 klart 2026-10-20. `list_models` deployat, nås via claude.ai-connector.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
@@ -35,20 +35,20 @@ Behålls från PAL:
 - thinking_mode och temperature per anrop
 
 # Mål
-1. Fungerande ersättare för PAL i Claude Code, på alla mina datorer med en `claude mcp add`
+1. Fungerande ersättare för PAL i Claude Code och claude.ai, på alla mina datorer via en connector i claude.ai
 2. Ett repo att visa upp för arbetsgivare. Konceptet "modeller diskuterar med varandra" ska synas på tio sekunder
 
 # Beslut
 
-| Fråga                    | Beslut                           | Varför                                                     |
-|--------------------------|----------------------------------|------------------------------------------------------------|
-| Språk och hosting        | JavaScript på Cloudflare Workers | Samma mönster som ai-storage, känt, snabbt                 |
-| Repo-namn                | mcp-roundtable                   | Grupperas med framtida mcp-* i ~/code                      |
-| Servernamn i Claude Code | roundtable                       | Prompts blir `/roundtable:consensus`                       |
-| Serverns ansvar          | Primitivt. Ett tool, `chat`      | Claude orkestrerar diskussionen själv, flexibelt           |
-| Diskussionsupplägg       | MCP-prompts i servern            | Följer med servern vid `claude mcp add`, kräver ingen synk |
-| Alias som "senaste GPT"  | Nej                              | Otydligt vilken modell som svarade                         |
-| Omfång                   | Bara chat tills det är flawless  | Få men felfria funktioner                                  |
+| Fråga                    | Beslut                           | Varför                                           |
+|--------------------------|----------------------------------|--------------------------------------------------|
+| Språk och hosting        | JavaScript på Cloudflare Workers | Samma mönster som ai-storage, känt, snabbt       |
+| Repo-namn                | mcp-roundtable                   | Grupperas med framtida mcp-* i ~/code            |
+| Servernamn i Claude Code | roundtable                       | Prompts blir `/roundtable:consensus`             |
+| Serverns ansvar          | Primitivt. Ett tool, `chat`      | Claude orkestrerar diskussionen själv, flexibelt |
+| Diskussionsupplägg       | MCP-prompts i servern            | Följer med servern, kräver ingen synk            |
+| Alias som "senaste GPT"  | Nej                              | Otydligt vilken modell som svarade               |
+| Omfång                   | Bara chat tills det är flawless  | Få men felfria funktioner                        |
 
 # MCP tools
 
@@ -120,10 +120,12 @@ Var och en använder sin egen OpenRouter-nyckel. Servern har ingen egen nyckel o
   med fel nyckel ger samma fel som ett okänt id, så andras konversationer går inte att läsa.
 - Workers-loggar avstängda. Nyckeln loggas inte.
 
-Installation:
-- Claude Code: `claude mcp add --scope user --transport http roundtable <url> --header "Authorization: Bearer sk-or-..."`
-- claude.ai: custom connector, Authentication "No sign in", nyckeln under Request headers. Följer med till
-  Desktop och mobil. Otestat om `Authorization` tillåts där. Annars tar servern även `X-OpenRouter-Key`.
+Installation, två alternativ:
+1. claude.ai: custom connector, Authentication "No sign in", nyckeln under Request headers. Följer kontot till
+   claude.ai, Desktop, mobil och Claude Code på alla datorer. Otestat om `Authorization` tillåts och om headern
+   når Claude Code. Annars tar servern även `X-OpenRouter-Key`. Det här använder jag sedan 2026-10-20.
+2. Bara Claude Code: `claude mcp add --scope user --transport http roundtable <url> --header "Authorization: Bearer sk-or-..."`.
+   För Claude Code med API-nyckel. Finns båda döljer Claude Code connectorn, eftersom URL:en är densamma.
 
 Förtroende: nyckeln passerar servern, så den som driftar servern kan i teorin läsa den. README ska säga
 att man skapar en egen OpenRouter-nyckel för roundtable med kreditgräns, så den kan dras tillbaka.
