@@ -76,8 +76,8 @@ Beslutat 2026-10-20. Servern kan inte läsa lokala filer, så Claude skickar `[{
   Samma fil skickad två gånger kostar dubbelt. Egen tabell där nyaste versionen ersätter, som i PAL, om det blir ett problem.
 - Budget: historik + filer + prompt, tecken/4, högst 75 % av `context_length`. Resten täcker svaret och att kod ger
   fler tokens per tecken. För stort ger isError med siffror per del, utan anrop till OpenRouter.
-- `context_length` från KV-cachade modellistan. Modell utanför listan (äldre än 365 dagar, `:free`) eller fel från
-  `/models`: budgeten hoppas över och OpenRouter avgör.
+- `context_length` från KV-cachade modellistan. Modell utanför listan (äldre än 365 dagar, `:free`) ger isError,
+  liksom fel från `/models`. Ändrat 2026-10-20, se Lagring.
 - Högst 1 000 000 tecken per runda oavsett modell, eftersom D1 tillåter 2 MB per rad.
 
 ## list_models
@@ -143,10 +143,21 @@ D1, binding `DB`, databas `mcp-roundtable` (550def2c-7fac-4494-b862-66473b5d5f13
 Migrationer i `migrations/`, körs med `wrangler d1 migrations apply mcp-roundtable --remote` före push.
 En runda sparas först när modellen har svarat. Annan modell än konversationens ger isError.
 
-| Tabell       | Kolumner                                    |
-|--------------|---------------------------------------------|
-| conversation | id, key_hash, model, created, updated       |
-| message      | id, conversation_id, role, content, created |
+Skydd mot att någon fyller D1, beslutat 2026-10-20. Gratisplanen debiterar inte, så risken är att tjänsten
+slutar fungera, inte kostnad. Rudimentärt, mot de enklaste attackerna.
+- Tak 100 miljoner tecken, ungefär 100 MB. Över taket raderas de äldsta konversationerna tills 80 miljoner återstår.
+  En angripare kan bara trycka ut gamla konversationer, inte stoppa tjänsten.
+- `conversation.chars` per konversation och summan i tabellen `stored`, en rad. Summan i egen rad så att varje
+  runda inte läser hela tabellen, gratisplanen tillåter 5 miljoner lästa rader per dygn.
+- `chat` tar bara modeller i modellistan. Budgeten gäller då alltid, och `:free`-modeller kan inte fylla D1 gratis.
+- Valt bort: utgångsdatum ensamt, låter en angripare blockera tills raderna går ut. Kvot per nyckel, nya
+  OpenRouter-nycklar är gratis.
+
+| Tabell       | Kolumner                                     |
+|--------------|----------------------------------------------|
+| conversation | id, key_hash, model, created, updated, chars |
+| stored       | id (alltid 1), chars                         |
+| message      | id, conversation_id, role, content, created  |
 
 # Auth
 Var och en använder sin egen OpenRouter-nyckel. Servern har ingen egen nyckel och ingen egen token.

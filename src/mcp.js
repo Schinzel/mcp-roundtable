@@ -11,6 +11,8 @@ const schema = (properties, required) =>
 const MISSING_KEY =
   "No OpenRouter key in the request. Add the header Authorization: Bearer sk-or-... to the connector or to claude mcp add. See README.";
 
+const MODELS_UNAVAILABLE = "Could not load the model list from OpenRouter, so the model cannot be checked. Try again shortly.";
+
 const UNKNOWN_CONVERSATION =
   "Unknown continuation_id. It only works with the OpenRouter key that started the conversation. " +
   "Leave continuation_id out to start a new conversation.";
@@ -39,7 +41,7 @@ export function buildServer(env, key) {
     {
       description:
         "Sends a prompt to another model through OpenRouter and returns its answer as is, with token usage and a continuation_id. " +
-        "model is an exact slug from list_models. The model sees only the prompt and, with continuation_id, the earlier " +
+        "model is an exact slug from list_models, other models are refused. The model sees only the prompt and, with continuation_id, the earlier " +
         "turns of that conversation, so include all other context it needs. " +
         "To ask several models in parallel, make several chat calls at the same time, each with its own continuation_id. " +
         "Files are kept in the conversation, so with continuation_id send only new or changed files.",
@@ -109,18 +111,22 @@ export function createHandler(env, key) {
 }
 
 /**
- * Modellens kontextfönster från den cachade katalogen. Saknas modellen, eller svarar inte /models, hoppas budgeten
- * över och OpenRouter får avgöra.
+ * Modellens kontextfönster från den cachade katalogen. Bara modeller i katalogen tillåts, så att budgeten alltid
+ * gäller och ingen kan fylla D1 gratis via `:free`-modeller. Se plan.md, Lagring.
  * @param {KVNamespace} cache
  * @param {string} model
- * @returns {Promise<number | undefined>}
+ * @returns {Promise<number>}
  */
 async function contextLengthOf(cache, model) {
+  let models;
   try {
-    return (await getModels(cache)).find((m) => m.slug === model)?.context_length;
+    models = await getModels(cache);
   } catch {
-    return undefined;
+    throw new Error(MODELS_UNAVAILABLE);
   }
+  const found = models.find((m) => m.slug === model);
+  if (!found) throw new Error(`Unknown model ${model}. Use a slug from list_models.`);
+  return found.context_length;
 }
 
 /** Kör verktyget, svarar med JSON som text, och gör fel till isError i stället för protokollfel. */

@@ -1,5 +1,6 @@
 import { env, SELF } from "cloudflare:test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { saveTurn } from "../../src/store.js";
 
 const headers = { "content-type": "application/json", accept: "application/json, text/event-stream" };
 let nextId = 1;
@@ -31,7 +32,10 @@ beforeEach(() => env.CACHE.delete("models"));
 const seedModels = () =>
   env.CACHE.put(
     "models",
-    JSON.stringify([{ slug: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol", context_length: 1000, added: "2026-10-15" }]),
+    JSON.stringify([
+      { slug: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol", context_length: 1000, added: "2026-10-15" },
+      { slug: "google/gemini-4-argon", name: "Google: Gemini 4 Argon", context_length: 1048576, added: "2026-10-13" },
+    ]),
   );
 afterEach(() => vi.restoreAllMocks());
 
@@ -255,11 +259,58 @@ describe("chat med files", () => {
     expect(res.text).toContain("leave continuation_id out");
   });
 
-  it("modell utanför katalogen skickas utan budget", async () => {
+  it("modell utanför katalogen ger isError och anropar inte OpenRouter", async () => {
     const fetch = mockOpenRouter(200, answer);
-    const res = await call("chat", { model: "openai/gpt-4o:free", prompt: "Granska", files: [{ path: "Big.java", content: "x".repeat(4000) }] }, key);
-    expect(res.isError).toBe(false);
+    const res = await call("chat", { model: "openai/gpt-4o:free", prompt: "Granska" }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toBe("Unknown model openai/gpt-4o:free. Use a slug from list_models.");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("ger isError när modellistan inte går att hämta", async () => {
+    await env.CACHE.delete("models");
+    const fetch = mockOpenRouter(503, {});
+    const res = await call("chat", { model, prompt: "Granska" }, key);
+    expect(res.isError).toBe(true);
+    expect(res.text).toContain("Could not load the model list");
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("tak för lagring", () => {
+  // D1 delas mellan testerna, så varje test har egna id.
+  let prefix;
+  beforeEach(() => (prefix = crypto.randomUUID()));
+  const save = (id, text, limits = { max: Infinity }) =>
+    saveTurn(env.DB, { id: prefix + id, keyHash: "h", model: "m", isNew: true }, text, text, limits);
+  const exists = async (id) => !!(await env.DB.prepare("SELECT 1 FROM conversation WHERE id = ?").bind(prefix + id).first());
+  const stored = async () => (await env.DB.prepare("SELECT chars FROM stored").first()).chars;
+
+  it("räknar upp summan för varje runda", async () => {
+    const before = await stored();
+    await save("a", "x".repeat(10));
+    await saveTurn(env.DB, { id: prefix + "a", keyHash: "h", model: "m", isNew: false }, "yy", "zzz");
+    expect(await stored()).toBe(before + 25);
+    expect((await env.DB.prepare("SELECT chars FROM conversation WHERE id = ?").bind(prefix + "a").first()).chars).toBe(25);
+  });
+
+  it("raderar de äldsta konversationerna över taket och behåller de nyaste", async () => {
+    await save("a", "x".repeat(10));
+    await save("b", "x".repeat(10));
+    await save("c", "x".repeat(10));
+    await save("d", "x".repeat(10), { max: 1, keep: 40 });
+    expect(await Promise.all(["a", "b", "c", "d"].map(exists))).toEqual([false, false, true, true]);
+    const messages = await env.DB.prepare("SELECT COUNT(*) AS n FROM message WHERE conversation_id IN (?, ?)")
+      .bind(prefix + "a", prefix + "b")
+      .first();
+    expect(messages.n).toBe(0);
+    expect(await stored()).toBe(40);
+  });
+
+  it("raderar inget under taket", async () => {
+    await save("a", "x".repeat(10));
+    await save("b", "x".repeat(10), { max: Number.MAX_SAFE_INTEGER, keep: 1 });
+    expect(await Promise.all(["a", "b"].map(exists))).toEqual([true, true]);
   });
 });
 
