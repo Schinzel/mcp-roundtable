@@ -91,7 +91,7 @@ Cloudflare-kontot är samma som ai-storage. `wrangler whoami` visar det, och Mac
   Att skriva MCP-protokollet utan SDK valdes bort, för mycket jobb för 5 USD/månad.
 
 ## Kvar att göra
-Steg 1–5 klara 2026-10-20: skelett, `list_models`, `chat`, continuation_id och files.
+Steg 1–5 klara 2026-10-20: skelett, `list_models`, `chat`, continuation_id och files. Steg 10, PAL borttaget, klart 2026-10-21.
 
 | Steg | Vad                                                    | Klart när                                     |
 |------|--------------------------------------------------------|-----------------------------------------------|
@@ -99,7 +99,6 @@ Steg 1–5 klara 2026-10-20: skelett, `list_models`, `chat`, continuation_id och
 | 7    | Connector i claude.ai                                  | Används redan. Kvar: når headern Claude Code? |
 | 8    | Prompts consensus, tenth_man, critic                   | En konsensusdiskussion körd end to end        |
 | 9    | README som säljer konceptet, gif                       | Konceptet syns på tio sekunder                |
-| 10   | Ta bort PAL och my-skill-pal-models                    |                                               |
 
 Öppet till steg 8: om Claude Code plockar MCP-prompts själv ur löpande text, eller bara via slash-kommando.
 
