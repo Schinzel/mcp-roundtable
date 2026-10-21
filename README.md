@@ -6,7 +6,7 @@ Use it when you want a second, third or fourth opinion: a hard problem where get
 
 Runs on Cloudflare Workers. You bring your own OpenRouter key.
 
-> **Status:** early. `list_models` and `chat` work, with follow-up rounds. The discussion prompts are being built. See [plan.md](plan.md).
+> **Status:** early. `list_models` and `chat` work, with follow-up rounds. The discussion prompts are being built.
 
 ## What it does
 
@@ -83,11 +83,4 @@ In Claude Code the prompts appear as slash commands under `/roundtable:`.
 
 ## Development
 
-JavaScript on Cloudflare Workers, Bun, the official MCP SDK. Everything runs in a Dev Container. See [CLAUDE.md](CLAUDE.md) for commands and [plan.md](plan.md) for design decisions.
-
-```bash
-./start.sh    # local server on http://localhost:8787/mcp
-./shell.sh    # shell in the container: bun test src, bunx vitest run
-```
-
-Push to `main` deploys through Workers Builds.
+See [CLAUDE.md](CLAUDE.md) for development and design decisions.

@@ -5,7 +5,7 @@ export const INPUT_SHARE = 0.75;
 export const MAX_TURN_CHARS = 1_000_000;
 
 /**
- * Uppskattat antal tokens, tecken/4. Ingen tokenizer, se plan.md, steg 5.
+ * Uppskattat antal tokens, tecken/4. Ingen tokenizer, se CLAUDE.md, files.
  * @param {string} text
  */
 export function estimateTokens(text) {

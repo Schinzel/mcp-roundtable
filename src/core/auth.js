@@ -1,5 +1,5 @@
 /**
- * Användarens OpenRouter-nyckel. Var och en skickar sin egen, servern har ingen. Se plan.md, Auth.
+ * Användarens OpenRouter-nyckel. Var och en skickar sin egen, servern har ingen. Se CLAUDE.md, Auth.
  * `Authorization: Bearer` i första hand. `X-OpenRouter-Key` om en klient inte kan sätta Authorization.
  * @param {Headers} headers
  * @returns {string | null}

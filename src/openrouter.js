@@ -28,7 +28,7 @@ const MODELS_TTL_SECONDS = 3600;
 
 /**
  * Modellkatalogen, nedbantad. Cachas i KV en timme, eftersom parsning av OpenRouters fulla svar
- * kostar mer CPU-tid än gratisplanens 10 ms. Se plan.md, Cloudflare-gränser.
+ * kostar mer CPU-tid än gratisplanens 10 ms. Se CLAUDE.md, Cloudflare-gränser.
  * @param {KVNamespace} cache
  * @returns {Promise<Array<{ slug: string, name: string, context_length: number, added: string }>>}
  */

@@ -20,7 +20,7 @@ export async function loadConversation(db, id, keyHash) {
   return model ? { model, messages: messages.results } : null;
 }
 
-/** Tak för lagrade tecken, ungefär byte. Gratisplanen tillåter 500 MB per databas. Se plan.md, Lagring. */
+/** Tak för lagrade tecken, ungefär byte. Gratisplanen tillåter 500 MB per databas. Se CLAUDE.md, Lagring. */
 export const MAX_STORED_CHARS = 100_000_000;
 
 /** Över taket raderas de äldsta konversationerna tills så här mycket återstår, så att det inte sker varje runda. */

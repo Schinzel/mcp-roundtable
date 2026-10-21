@@ -112,7 +112,7 @@ export function createHandler(env, key) {
 
 /**
  * Modellens kontextfönster från den cachade katalogen. Bara modeller i katalogen tillåts, så att budgeten alltid
- * gäller och ingen kan fylla D1 gratis via `:free`-modeller. Se plan.md, Lagring.
+ * gäller och ingen kan fylla D1 gratis via `:free`-modeller. Se CLAUDE.md, Lagring.
  * @param {KVNamespace} cache
  * @param {string} model
  * @returns {Promise<number>}
