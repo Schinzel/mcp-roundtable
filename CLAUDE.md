@@ -134,7 +134,7 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 
 ## Remaining work
 Steps 1–5 done 2026-10-20: skeleton, `list_models`, `chat`, continuation_id and files. Step 10, PAL removed, done 2026-10-21.
-Step 6, `thinking`, implemented 2026-10-21, not yet verified in production. `temperature` was dropped, see Decisions.
+Step 6, `thinking`, done and verified in production 2026-10-21. `temperature` was dropped, see Decisions.
 
 | Step | What                                 | Done when                                                |
 |------|--------------------------------------|----------------------------------------------------------|
