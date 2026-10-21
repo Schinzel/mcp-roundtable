@@ -1,5 +1,5 @@
 /**
- * SHA-256 av nyckeln, hex. Sparas i conversation.key_hash i stället för nyckeln. Se CLAUDE.md, Auth.
+ * SHA-256 of the key, hex. Stored in conversation.key_hash instead of the key. See CLAUDE.md, Auth.
  * @param {string} key
  * @returns {Promise<string>}
  */

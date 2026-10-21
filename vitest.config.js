@@ -1,3 +1,5 @@
+// Integration tests run in workerd with the bindings from wrangler.jsonc, locally simulated.
+// The D1 migrations are read here and applied in test/integration/setup.js.
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
 

@@ -1,5 +1,5 @@
--- Tak för lagrad volym. conversation.chars är antal tecken i konversationens meddelanden, stored.chars summan av alla.
--- Summan hålls i en egen rad så att varje runda inte läser hela tabellen. Se CLAUDE.md, Lagring.
+-- Cap for stored volume. conversation.chars is the number of characters in the conversation's messages, stored.chars the sum of all.
+-- The sum is kept in its own row so that each turn does not read the whole table. See CLAUDE.md, Storage.
 ALTER TABLE conversation ADD COLUMN chars INTEGER NOT NULL DEFAULT 0;
 
 UPDATE conversation

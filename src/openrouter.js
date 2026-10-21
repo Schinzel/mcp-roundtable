@@ -2,13 +2,14 @@ import { buildChatRequest, chatErrorMessage, parseChatResponse } from "./core/ch
 import { modelsUrl, trimCatalog } from "./core/models.js";
 
 /**
- * Skickar en prompt till en modell med användarens egen nyckel. Nyckeln loggas och sparas aldrig.
+ * Sends a prompt to a model with the user's own key. The key is never logged or stored.
  * @param {string} key
  * @param {string} model
  * @param {string} prompt
- * @param {Array<{ role: string, content: string }>} [history] tidigare rundor i konversationen
+ * @param {Array<{ role: string, content: string }>} [history] earlier turns in the conversation
+ * @param {string} [effort] thinking level, left out gives the model's default
  */
-export async function chat(key, model, prompt, history) {
+export async function chat(key, model, prompt, history, effort) {
   const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -17,18 +18,19 @@ export async function chat(key, model, prompt, history) {
       "http-referer": "https://github.com/Schinzel/mcp-roundtable",
       "x-title": "mcp-roundtable",
     },
-    body: JSON.stringify(buildChatRequest(model, prompt, history)),
+    body: JSON.stringify(buildChatRequest(model, prompt, history, effort)),
   });
   if (!res.ok) throw new Error(chatErrorMessage(res.status, await res.text()));
   return parseChatResponse(await res.json());
 }
 
-const MODELS_KEY = "models";
+/** Changed when the format of the cached list changes, so old entries are not read. */
+const MODELS_KEY = "models-v2";
 const MODELS_TTL_SECONDS = 3600;
 
 /**
- * Modellkatalogen, nedbantad. Cachas i KV en timme, eftersom parsning av OpenRouters fulla svar
- * kostar mer CPU-tid än gratisplanens 10 ms. Se CLAUDE.md, Cloudflare-gränser.
+ * The model catalog, trimmed. Cached in KV for one hour, since parsing OpenRouter's full response
+ * costs more CPU time than the free plan's 10 ms. See CLAUDE.md, Cloudflare limits.
  * @param {KVNamespace} cache
  * @returns {Promise<Array<{ slug: string, name: string, context_length: number, added: string }>>}
  */
@@ -40,7 +42,7 @@ export async function getModels(cache) {
   return models;
 }
 
-/** Hämtar OpenRouters modellkatalog, filtrerad enligt src/core/models.js. Kräver ingen nyckel. */
+/** Fetches OpenRouter's model catalog, filtered according to src/core/models.js. Requires no key. */
 async function fetchCatalog() {
   const res = await fetch(modelsUrl());
   if (!res.ok) throw new Error(`OpenRouter /models returned ${res.status}`);

@@ -1,5 +1,6 @@
 node_modules/
 .wrangler/
+# Local secrets for wrangler dev and others, never committed
 .dev.vars
 .env
 .DS_Store

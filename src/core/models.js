@@ -1,10 +1,10 @@
-/** Företag vars modeller list_models visar. Filtret körs hos OpenRouter för att spara CPU-tid. */
+/** Companies whose models list_models shows. The filter runs at OpenRouter to save CPU time. */
 export const MODEL_AUTHORS = ["openai", "google", "anthropic", "x-ai", "deepseek"];
 
-/** Modeller som lagts till hos OpenRouter för längre sedan visas inte. De går fortfarande att anropa med slug. */
+/** Models added to OpenRouter longer ago are not shown. They can still be called by slug. */
 export const MAX_AGE_DAYS = 365;
 
-/** @returns {string} URL till OpenRouters modellkatalog, filtrerad och nyast först */
+/** @returns {string} URL to OpenRouter's model catalog, filtered and newest first */
 export function modelsUrl() {
   const params = new URLSearchParams({
     model_authors: MODEL_AUTHORS.join(","),
@@ -16,10 +16,13 @@ export function modelsUrl() {
 }
 
 /**
- * Bantar ned OpenRouters svar till det list_models returnerar. Resultatet är det som cachas.
- * Varianter som `:batch` och `:free` och OpenRouters alias med `~` tas bort.
- * @param {{ data: Array<{ id: string, name: string, context_length: number, created: number }> }} catalog
- * @returns {Array<{ slug: string, name: string, context_length: number, added: string }>}
+ * Trims OpenRouter's response down to what list_models returns. The result is what gets cached.
+ * Variants like `:batch` and `:free` and OpenRouter's aliases with `~` are removed.
+ * Models without effort levels get no thinking fields.
+ * @param {{ data: Array<{ id: string, name: string, context_length: number, created: number,
+ *   reasoning?: { supported_efforts?: string[], default_effort?: string } }> }} catalog
+ * @returns {Array<{ slug: string, name: string, context_length: number, added: string,
+ *   thinking?: string[], default_thinking?: string }>}
  */
 export function trimCatalog(catalog) {
   return catalog.data
@@ -29,12 +32,20 @@ export function trimCatalog(catalog) {
       name: m.name,
       context_length: m.context_length,
       added: new Date(m.created * 1000).toISOString().slice(0, 10),
+      ...thinkingOf(m.reasoning),
     }));
+}
+
+/** @param {{ supported_efforts?: string[], default_effort?: string } | undefined} reasoning */
+function thinkingOf(reasoning) {
+  const levels = reasoning?.supported_efforts;
+  if (!levels?.length) return {};
+  return { thinking: levels, ...(reasoning.default_effort && { default_thinking: reasoning.default_effort }) };
 }
 
 /**
  * @param {Array<{ slug: string, name: string }>} models
- * @param {string} [filter] text som måste finnas i slug eller namn, skiftlägesokänsligt
+ * @param {string} [filter] text that must appear in the slug or name, case-insensitive
  */
 export function filterModels(models, filter) {
   const needle = filter?.trim().toLowerCase();

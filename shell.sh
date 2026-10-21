@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Öppnar ett skal i Dev Containern, för tester och andra kommandon.
+# Opens a shell in the Dev Container, for tests and other commands.
 set -euo pipefail
 cd "$(dirname "$0")"
-# -it bara när vi har en terminal, annars går skriptet inte att köra från t.ex. ett annat verktyg
+# -it only when we have a terminal, otherwise the script cannot be run from e.g. another tool
 TTY=""; [ -t 0 ] && TTY="-it"
 exec docker run --rm $TTY \
   -v "$PWD:/workspace" \

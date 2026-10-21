@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Startar utvecklingsservern i Dev Containern. Körs från Macen.
-# Bygger imagen första gången, installerar beroenden och startar wrangler dev.
-# Servern nås på http://localhost:8787, MCP på http://localhost:8787/mcp. Ctrl+C stoppar.
+# Starts the development server in the Dev Container. Run from the Mac.
+# Builds the image the first time, installs dependencies and starts wrangler dev.
+# The server is at http://localhost:8787, MCP at http://localhost:8787/mcp. Ctrl+C stops it.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -9,11 +9,11 @@ IMAGE=mcp-roundtable-dev
 VOLUME=mcp-roundtable-node-modules
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
-  echo "Bygger $IMAGE ..."
+  echo "Building $IMAGE ..."
   docker build -q -t "$IMAGE" .devcontainer
 fi
 
-# -it bara när vi har en terminal, annars går skriptet inte att köra från t.ex. ett annat verktyg
+# -it only when we have a terminal, otherwise the script cannot be run from e.g. another tool
 TTY=""; [ -t 0 ] && TTY="-it"
 exec docker run --rm $TTY \
   -p 8787:8787 \

@@ -1,9 +1,12 @@
+// Cloudflare Worker config. Push to main deploys it via Workers Builds, see CLAUDE.md, Deploy.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mcp-roundtable",
   "main": "src/index.js",
   "compatibility_date": "2026-08-22",
+  // The MCP SDK needs Node APIs.
   "compatibility_flags": ["nodejs_compat"],
+  // Conversations for continuation_id, see src/store.js and CLAUDE.md, Storage.
   "d1_databases": [
     {
       "binding": "DB",
@@ -12,6 +15,7 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Cached model list, one hour, see src/openrouter.js.
   "kv_namespaces": [
     {
       "binding": "CACHE",

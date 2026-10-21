@@ -1,105 +1,147 @@
 # mcp-roundtable
 
-## Läs först
-- README.md: vad servern gör, installation och användning, för användare. Produktions-URL:en står där.
-- Beslut nedan: skäl som inte syns i koden. Nya designbeslut skrivs där.
+## Read first
+- README.md: what the server does, installation and usage, for users. The production URL is there.
+- Decisions below: reasons that are not visible in the code. New design decisions go there.
 
-## Konventioner
-- JavaScript, ES-moduler, JSDoc vid behov. Inte TypeScript.
-- Pakethanterare: Bun.
-- MCP-bibliotek: `@modelcontextprotocol/server`, createMcpHandler, stateless.
-- Kärnlogik i `src/core/` utan Cloudflare-beroenden, så den kan enhetstestas med `bun test`.
-- Upprepa inte i CLAUDE.md det som står i README.md. Peka på README i stället. Utvecklarinfo hör hemma här, README pekar hit.
-- Text som modeller och användare läser är på engelska: verktygsbeskrivningar, parametrar, felmeddelanden, README. Kodkommentarer och testnamn på svenska.
+## Conventions
+- JavaScript, ES modules, JSDoc where needed. Not TypeScript.
+- Package manager: Bun.
+- MCP library: `@modelcontextprotocol/server`, createMcpHandler, stateless.
+- Core logic in `src/core/` without Cloudflare dependencies, so it can be unit tested with `bun test`.
+- Do not repeat in CLAUDE.md what is in README.md. Point to the README instead. Developer info belongs here, the README points here.
+- Everything in the repo is US English: code comments, test names, tool descriptions, parameters, error messages, README, and this file.
 
-## Kommandon
-- `./start.sh` från Macen: bygger containern vid behov och startar servern på port 8787.
-- `./shell.sh` från Macen: skal i containern för att köra kommandona nedan. Kräver att `./start.sh` har byggt imagen.
+## Commands
+- `./start.sh` from the Mac: builds the container if needed and starts the server on port 8787.
+- `./shell.sh` from the Mac: a shell in the container for running the commands below. Requires that `./start.sh` has built the image.
 
-Nedanstående körs i Dev Containern. Macens Node är x86_64 under Rosetta, så vitest och wrangler fungerar inte utanför containern.
+The following run in the Dev Container. The Mac's Node is x86_64 under Rosetta, so vitest and wrangler do not work outside the container.
 
-- `bun install` installerar beroenden.
-- `bun test src` kör enhetstester i src/core.
-- `bunx vitest run` kör integrationstester i workerd.
-- `bunx wrangler dev` startar servern på port 8787. MCP-endpoint: `http://localhost:8787/mcp`.
+- `bun install` installs dependencies.
+- `bun test src` runs unit tests in src/core.
+- `bunx vitest run` runs integration tests in workerd.
+- `bunx wrangler dev` starts the server on port 8787. MCP endpoint: `http://localhost:8787/mcp`.
 
 ## Deploy
-Push till main deployar automatiskt via Workers Builds till produktions-URL:en i README.
-Manuell deploy från Macen, med wrangler-inloggningen monterad:
+Push to main deploys automatically via Workers Builds to the production URL in the README.
+Manual deploy from the Mac, with the wrangler login mounted:
 `docker run --rm -v ~/code/mcp-roundtable:/workspace -v mcp-roundtable-node-modules:/workspace/node_modules -v ~/Library/Preferences/.wrangler:/root/.config/.wrangler -w /workspace mcp-roundtable-dev bunx wrangler deploy`
 
-Cloudflare-kontot är samma som ai-storage. `wrangler whoami` visar det, och Macens wrangler-inloggning ser bara det kontot. Workers Builds kräver att Cloudflares GitHub-app har tillgång till repot.
+The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, and the Mac's wrangler login only sees that account. Workers Builds requires that Cloudflare's GitHub app has access to the repo.
 
-## Struktur
-- `src/core/` ren logik utan Cloudflare-beroenden, testas med bun test.
-- `src/mcp.js` verktygsdefinitioner och MCP-server.
-- `src/openrouter.js` tunt lager mot OpenRouters API.
-- `src/store.js` tunt lager mot D1, konversationer för continuation_id.
-- `migrations/` D1-schema. Körs mot produktion med `bunx wrangler d1 migrations apply mcp-roundtable --remote` före push, Workers Builds kör dem inte.
-- `src/index.js` Worker-entry, routar till MCP-handlern.
-- `test/integration/` vitest mot SELF i workerd.
+## Structure
+- `src/core/` pure logic without Cloudflare dependencies, tested with bun test.
+- `src/mcp.js` tool definitions and MCP server.
+- `src/openrouter.js` thin layer over OpenRouter's API.
+- `src/store.js` thin layer over D1, conversations for continuation_id.
+- `migrations/` D1 schema. Run against production with `bunx wrangler d1 migrations apply mcp-roundtable --remote` before push, Workers Builds does not run them.
+- `src/index.js` Worker entry, routes to the MCP handler.
+- `test/integration/` vitest against SELF in workerd.
+- `package.json` dependencies and scripts. The scripts are shortcuts for the commands above and run in the Dev Container.
+  JSON cannot have comments, so it is described here.
+- `bun.lock` generated by `bun install`, committed so Workers Builds installs the same versions. Never edit it by hand.
 
-## Beslut
+## Decisions
 
-### Omfång
-- Servern är primitiv: `list_models` och `chat`. Claude kör diskussionen själv, och upplägg blir MCP-prompts.
-- Bara exakta OpenRouter-slugs, inga alias som "senaste GPT", så att det syns vilken modell som svarade.
-- Få men felfria funktioner. Inget nytt förrän `chat` fungerar felfritt.
+### Scope
+- The server is primitive: `list_models` and `chat`. Claude runs the discussion itself, and formats become MCP prompts.
+- Only exact OpenRouter slugs, no aliases like "latest GPT", so it is visible which model answered.
+- Few but flawless features. Nothing new until `chat` works flawlessly.
 
 ### list_models
-- Filtret `model_authors` och `max_age_days` 365 körs hos OpenRouter för att spara CPU. Hela listan är 785 KB.
-- Servern tar bort slugs med `:` och `~`, alltså varianter som `:free` och OpenRouters alias.
-- Den nedbantade listan, cirka 10 KB, cachas i KV en timme.
+- The filter `model_authors` and `max_age_days` 365 runs at OpenRouter to save CPU. The full list is 785 KB.
+- The server removes slugs with `:` and `~`, that is variants like `:free` and OpenRouter's aliases.
+- The trimmed list, about 10 KB, is cached in KV for one hour.
 
 ### files
-- Filerna läggs före prompten som `<file path="...">...</file>`. Taggar går inte sönder av ``` i innehållet,
-  och frågan sist är det modellerna rekommenderar för lång kontext.
-- Filerna sparas i användarmeddelandet i D1, ingen egen tabell. Samma fil två gånger kostar dubbelt.
-  Byt till en egen tabell där nyaste versionen ersätter, som i PAL, om det blir ett problem.
-- Budget: historik + filer + prompt, tecken/4, högst 75 % av `context_length`. Ingen tokenizer. Resten täcker
-  svaret och att kod ger fler tokens per tecken. För stort ger isError utan anrop till OpenRouter.
-- Högst 1 000 000 tecken per runda oavsett modell, eftersom D1 tillåter 2 MB per rad.
-- Testa budgeten med curl mot `/mcp` och en påhittad nyckel. Budgetkontrollen kommer före OpenRouter, och Claude
-  kan inte skriva 200 000 tecken i ett verktygsargument.
+- The files are placed before the prompt as `<file path="...">...</file>`. Tags do not break on ``` in the content,
+  and the question last is what the models recommend for long context.
+- The files are stored in the user message in D1, no separate table. The same file twice costs double.
+  Switch to a separate table where the newest version replaces, as in PAL, if it becomes a problem.
+- Budget: history + files + prompt, characters/4, at most 75 % of `context_length`. No tokenizer. The rest covers
+  the answer and that code gives more tokens per character. Too large gives isError without a call to OpenRouter.
+- At most 1 000 000 characters per turn regardless of model, since D1 allows 2 MB per row.
+- Test the budget with curl against `/mcp` and a made-up key. The budget check comes before OpenRouter, and Claude
+  cannot write 200 000 characters in a tool argument.
 
-### Lagring
-- Skydd mot att någon fyller D1. Gratisplanen debiterar inte, så risken är att tjänsten slutar fungera.
-  Tak 100 miljoner tecken. Över taket raderas de äldsta konversationerna tills 80 miljoner återstår.
-  En angripare kan bara trycka ut gamla konversationer, inte stoppa tjänsten.
-- Summan ligger i tabellen `stored`, en rad, så att varje runda inte läser hela tabellen.
-  Gratisplanen tillåter 5 miljoner lästa rader per dygn.
-- `chat` tar bara modeller i modellistan. Då gäller budgeten alltid, och `:free`-modeller kan inte fylla D1 gratis.
-- Valt bort: bara utgångsdatum, som låter en angripare blockera tills raderna går ut. Kvot per nyckel,
-  eftersom nya OpenRouter-nycklar är gratis.
-- En runda sparas först när modellen har svarat.
+### thinking
+- `thinking` is an effort level: none < minimal < low < medium < high < xhigh < max. Sent as OpenRouter's
+  `reasoning.effort`. A `max_tokens` budget is not used, OpenRouter converts effort to a budget.
+- The models have different levels, according to `reasoning.supported_efforts` in the catalog. If the level is missing,
+  the server takes the nearest on the scale, the higher one on a tie, and the answer shows the level used. A discussion
+  had better be too thorough. Rejected: an error listing valid levels, which costs an extra call, and passing it on
+  unchecked. PAL silently ignored `thinking_mode` for everything except Gemini direct.
+- Models without levels in the catalog ignore `thinking`, and the answer then lacks the field.
+- The reasoning is always removed from the answer with `exclude: true`. Claude needs the conclusion, the text fills the
+  context and costs CPU to parse. `usage.reasoning_tokens` shows how much the model thought.
+- Applies to one turn at a time. Without `thinking` the model's default applies, also in a continued conversation. No column in D1.
+- The cache key in KV is `models-v2`. Change it when the format of the cached list changes.
+
+### temperature
+- Rejected. The OpenAI and Anthropic models do not accept it, and for models that think it matters little.
+
+### Reporting
+- PAL often reported "option B won with 90% confidence" without saying what A, B and C were, which made the answer
+  useless. The server instructions therefore require a table that defines every option before any verdict, with
+  outcome per option: which models backed it, confidence, strongest counterargument.
+- The rule is in the server instructions, and `chat`'s description points to it in case a client does not show them.
+  The prompts in step 8 get the same rule.
+- The report ends with one line of cost: total USD, per model, reasoning tokens. Claude sums `usage.cost_usd` from the
+  chat answers it already has, so no new tool. Rejected for now: cost after every answer (noise), only on request or
+  via a command (forgotten, and history needs a tool reading D1), the key's balance from OpenRouter's `/api/v1/key`
+  (an extra call, says nothing about this discussion). Add a history tool or the balance if the need shows up.
+
+### Errors
+- Out of credits gets its own message: 402, or 403 with `limit_source: openrouter_key_limit`. It says where to add
+  credits and that the conversation is kept, followed by OpenRouter's own text. Other errors pass on OpenRouter's text.
+- No `max_tokens` is sent, so OpenRouter may reserve the cost of the longest possible answer and give 402 with
+  some credits left. Not verified.
+
+### Usage
+- Each turn saves `prompt_tokens`, `completion_tokens`, `reasoning_tokens`, `cost_usd` and the `thinking` level sent
+  on the assistant message in D1. NULL on user messages, turns before migration 0003, and fields OpenRouter leaves out.
+  Reasoning tokens are billed as output but their text is not kept, so this is the only record of them.
+- Evicted conversations take their usage with them. Fine as long as usage is for estimates, not billing.
+
+### Storage
+- Protection against someone filling D1. The free plan does not charge, so the risk is that the service stops working.
+  Cap 100 million characters. Above the cap the oldest conversations are deleted until 80 million remain.
+  An attacker can only push out old conversations, not stop the service.
+- The sum lives in the table `stored`, one row, so that each turn does not read the whole table.
+  The free plan allows 5 million rows read per day.
+- `chat` only accepts models in the model list. Then the budget always applies, and `:free` models cannot fill D1 for free.
+- Rejected: only an expiry date, which lets an attacker block until the rows expire. Quota per key,
+  since new OpenRouter keys are free.
+- A turn is saved only after the model has answered.
 
 ### Auth
-- Varje användare skickar sin egen OpenRouter-nyckel i `Authorization: Bearer`. Servern har ingen egen.
-- `chat` utan nyckel ger isError, inte HTTP 401. En 401 stoppar även `list_models`, och claude.ai tolkar 401
-  som att servern kräver OAuth.
-- Nyckeln sparas aldrig. D1 har SHA-256 av den i `conversation.key_hash`. Fel nyckel ger samma fel som ett okänt
-  continuation_id, så andras konversationer går inte att läsa.
-- Workers-loggar är avstängda. Logga aldrig nyckeln.
-- Självhostning med "Deploy to Cloudflare"-knapp valdes bort.
+- Each user sends their own OpenRouter key in `Authorization: Bearer`. The server has none of its own.
+- `chat` without a key gives isError, not HTTP 401. A 401 also stops `list_models`, and claude.ai interprets 401
+  as the server requiring OAuth.
+- The key is never stored. D1 has its SHA-256 in `conversation.key_hash`. A wrong key gives the same error as an unknown
+  continuation_id, so other people's conversations cannot be read.
+- Workers logs are turned off. Never log the key.
+- Self-hosting with a "Deploy to Cloudflare" button was rejected.
 
-### Cloudflare-gränser
-- Gratisplanen ger 10 ms CPU per anrop. Över gränsen ger Error 1102. Väntan på OpenRouter och D1 räknas inte.
-- `chat` drar 18–56 ms på grund av kallstarter. Bundlen är 886 KB, mest zod och MCP-SDK:n, och kompileras i varje
-  ny isolate. Anrop från claude.ai landar nästan alltid i en kall isolate. Varma anrop tar 2–3 ms. Ingen 1102 hittills.
-- Beslut: låt det vara och kolla efter 1102 efter varje steg, med `wrangler tail mcp-roundtable --format json`
-  (cpuTime, outcome). Dyker 1102 upp, byt till Workers Paid, 5 USD/månad, 30 s CPU.
-  Att skriva MCP-protokollet utan SDK valdes bort, för mycket jobb för 5 USD/månad.
+### Cloudflare limits
+- The free plan gives 10 ms CPU per request. Over the limit gives Error 1102. Waiting on OpenRouter and D1 does not count.
+- `chat` uses 18–56 ms because of cold starts. The bundle is 886 KB, mostly zod and the MCP SDK, and is compiled in every
+  new isolate. Requests from claude.ai almost always land in a cold isolate. Warm requests take 2–3 ms. No 1102 so far.
+- Decision: leave it and check for 1102 after each step, with `wrangler tail mcp-roundtable --format json`
+  (cpuTime, outcome). If 1102 shows up, switch to Workers Paid, 5 USD/month, 30 s CPU.
+  Writing the MCP protocol without the SDK was rejected, too much work for 5 USD/month.
 
-## Kvar att göra
-Steg 1–5 klara 2026-10-20: skelett, `list_models`, `chat`, continuation_id och files. Steg 10, PAL borttaget, klart 2026-10-21.
+## Remaining work
+Steps 1–5 done 2026-10-20: skeleton, `list_models`, `chat`, continuation_id and files. Step 10, PAL removed, done 2026-10-21.
+Step 6, `thinking`, implemented 2026-10-21, not yet verified in production. `temperature` was dropped, see Decisions.
 
-| Steg | Vad                                                    | Klart när                                     |
-|------|--------------------------------------------------------|-----------------------------------------------|
-| 6    | `thinking` enligt OpenRouters reasoning, `temperature` |                                               |
-| 7    | Connector i claude.ai                                  | Används redan. Kvar: når headern Claude Code? |
-| 8    | Prompts consensus, tenth_man, critic                   | En konsensusdiskussion körd end to end        |
-| 9    | README som säljer konceptet, gif                       | Konceptet syns på tio sekunder                |
+| Step | What                                 | Done when                                                |
+|------|--------------------------------------|----------------------------------------------------------|
+| 7    | Connector in claude.ai               | Already in use. Left: does the header reach Claude Code? |
+| 8    | Prompts consensus, tenth_man, critic | A consensus discussion run end to end                    |
+| 9    | README that sells the concept, gif   | The concept is clear in ten seconds                      |
 
-Öppet till steg 8: om Claude Code plockar MCP-prompts själv ur löpande text, eller bara via slash-kommando.
+Open until step 8: whether Claude Code picks MCP prompts on its own from running text, or only via slash command.
 
-Senare, inte nu: verktyget `discuss` som kör ett helt upplägg i servern, kostnadsgräns per dag, fler upplägg.
+Later, not now: the tool `discuss` that runs a whole format in the server, cost limit per day, more formats.

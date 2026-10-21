@@ -1,6 +1,6 @@
 /**
- * Läser en konversation. Okänt id och fel nyckel ger båda null, så andras konversationer går inte att skilja från
- * påhittade id.
+ * Reads a conversation. An unknown id and a wrong key both give null, so other people's conversations cannot be told
+ * apart from made-up ids.
  * @param {D1Database} db
  * @param {string} id
  * @param {string} keyHash
@@ -20,26 +20,34 @@ export async function loadConversation(db, id, keyHash) {
   return model ? { model, messages: messages.results } : null;
 }
 
-/** Tak för lagrade tecken, ungefär byte. Gratisplanen tillåter 500 MB per databas. Se CLAUDE.md, Lagring. */
+/** Cap for stored characters, roughly bytes. The free plan allows 500 MB per database. See CLAUDE.md, Storage. */
 export const MAX_STORED_CHARS = 100_000_000;
 
-/** Över taket raderas de äldsta konversationerna tills så här mycket återstår, så att det inte sker varje runda. */
+/** Above the cap the oldest conversations are deleted until this much remains, so it does not happen every turn. */
 export const KEEP_STORED_CHARS = 80_000_000;
 
 /**
- * Sparar en runda, prompt och svar, efter att modellen har svarat. Skapar konversationen om den är ny.
- * Går den lagrade volymen över taket raderas de äldsta konversationerna.
+ * Saves a turn, prompt and answer, after the model has answered. Creates the conversation if it is new.
+ * Usage and the thinking level go on the assistant message. See CLAUDE.md, Usage.
+ * If the stored volume goes over the cap, the oldest conversations are deleted.
  * @param {D1Database} db
  * @param {{ id: string, keyHash: string, model: string, isNew: boolean }} conversation
  * @param {string} prompt
  * @param {string} answer
- * @param {{ max?: number, keep?: number }} [limits] för tester
+ * @param {{ usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number, cost_usd?: number },
+ *   thinking?: string }} [meta]
+ * @param {{ max?: number, keep?: number }} [limits] for tests
  */
-export async function saveTurn(db, { id, keyHash, model, isNew }, prompt, answer, limits = {}) {
+export async function saveTurn(db, { id, keyHash, model, isNew }, prompt, answer, meta = {}, limits = {}) {
   const { max = MAX_STORED_CHARS, keep = KEEP_STORED_CHARS } = limits;
   const now = new Date().toISOString();
   const chars = prompt.length + answer.length;
+  const { usage = {}, thinking } = meta;
   const message = db.prepare("INSERT INTO message (conversation_id, role, content, created) VALUES (?, ?, ?, ?)");
+  const reply = db.prepare(
+    "INSERT INTO message (conversation_id, role, content, created, prompt_tokens, completion_tokens, reasoning_tokens, cost_usd, thinking) " +
+      "VALUES (?, 'assistant', ?, ?, ?, ?, ?, ?, ?)",
+  );
   const results = await db.batch([
     isNew
       ? db
@@ -47,14 +55,23 @@ export async function saveTurn(db, { id, keyHash, model, isNew }, prompt, answer
           .bind(id, keyHash, model, now, now, chars)
       : db.prepare("UPDATE conversation SET updated = ?, chars = chars + ? WHERE id = ?").bind(now, chars, id),
     message.bind(id, "user", prompt, now),
-    message.bind(id, "assistant", answer, now),
+    reply.bind(
+      id,
+      answer,
+      now,
+      usage.prompt_tokens ?? null,
+      usage.completion_tokens ?? null,
+      usage.reasoning_tokens ?? null,
+      usage.cost_usd ?? null,
+      thinking ?? null,
+    ),
     db.prepare("UPDATE stored SET chars = chars + ? WHERE id = 1 RETURNING chars").bind(chars),
   ]);
   if (results.at(-1).results[0].chars > max) await evict(db, keep);
 }
 
 /**
- * Raderar de äldsta konversationerna tills de nyaste som ryms inom keep återstår, och räknar om summan.
+ * Deletes the oldest conversations until the newest that fit within keep remain, and recalculates the sum.
  * @param {D1Database} db
  * @param {number} keep
  */

@@ -1,8 +1,11 @@
+// Dev Container with Bun and Node. The Mac's Node runs under Rosetta, so vitest and wrangler only work in here.
+// ./start.sh and ./shell.sh build and use the same image, see CLAUDE.md, Commands.
 {
   "name": "mcp-roundtable",
   "build": { "dockerfile": "Dockerfile" },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  // wrangler dev
   "forwardPorts": [8787],
   "postCreateCommand": "bun install",
   "remoteUser": "bun"

@@ -12,10 +12,10 @@ Runs on Cloudflare Workers. You bring your own OpenRouter key.
 
 The server is deliberately small. It gives Claude one way to talk to another model, and Claude runs the discussion itself.
 
-| Tool          | What it does                                                                                                                                 |
-|---------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| `list_models` | Current models from OpenAI, Google, Anthropic, xAI and DeepSeek, newest first, with context size                                             |
-| `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. Pass the returned `continuation_id` to continue the conversation |
+| Tool          | What it does                                                                                                                                                                                      |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `list_models` | Current models from OpenAI, Google, Anthropic, xAI and DeepSeek, newest first, with context size and supported thinking levels                                                                    |
+| `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. Optional `thinking` sets how hard the model reasons. Pass the returned `continuation_id` to continue the conversation |
 
 | Prompt      | Setup *(coming)*                                          |
 |-------------|-----------------------------------------------------------|

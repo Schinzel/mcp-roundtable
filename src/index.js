@@ -1,3 +1,4 @@
+// Worker entry. Only /mcp is served, with the user's OpenRouter key taken from the request headers.
 import { openRouterKey } from "./core/auth.js";
 import { createHandler } from "./mcp.js";
 

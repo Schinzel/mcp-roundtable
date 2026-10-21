@@ -1,11 +1,11 @@
-/** Andel av kontextfönstret som indata får ta. Resten täcker svaret och att tecken/4 underskattar kod. */
+/** Share of the context window the input may take. The rest covers the answer and that characters/4 underestimates code. */
 export const INPUT_SHARE = 0.75;
 
-/** Högsta antal tecken i en runda. D1 tillåter 2 MB per rad, och ett tecken kan bli flera byte i UTF-8. */
+/** Maximum number of characters in a turn. D1 allows 2 MB per row, and a character can be several bytes in UTF-8. */
 export const MAX_TURN_CHARS = 1_000_000;
 
 /**
- * Uppskattat antal tokens, tecken/4. Ingen tokenizer, se CLAUDE.md, files.
+ * Estimated number of tokens, characters/4. No tokenizer, see CLAUDE.md, files.
  * @param {string} text
  */
 export function estimateTokens(text) {
@@ -13,7 +13,7 @@ export function estimateTokens(text) {
 }
 
 /**
- * Lägger filerna före prompten, var och en i en tagg med sökvägen. Taggar går inte sönder av ``` i innehållet.
+ * Places the files before the prompt, each in a tag with its path. Tags do not break on ``` in the content.
  * @param {string} prompt
  * @param {Array<{ path: string, content: string }>} [files]
  */
@@ -23,10 +23,10 @@ export function composePrompt(prompt, files = []) {
 }
 
 /**
- * Felmeddelande om rundan inte får plats, annars null. Historiken räknas in eftersom den skickas om varje runda.
+ * Error message if the turn does not fit, otherwise null. The history counts since it is resent every turn.
  * @param {{ model: string, contextLength?: number, prompt: string, composed: string,
  *   history: Array<{ content: string }>, continued: boolean }} turn
- *   composed är prompten med filerna, contextLength saknas för modeller utanför katalogen
+ *   composed is the prompt with the files, contextLength is missing for models outside the catalog
  * @returns {string | null}
  */
 export function budgetError({ model, contextLength, prompt, composed, history, continued }) {

@@ -1,4 +1,4 @@
--- Konversationer för continuation_id. key_hash är SHA-256 av användarens OpenRouter-nyckel, nyckeln sparas aldrig.
+-- Conversations for continuation_id. key_hash is SHA-256 of the user's OpenRouter key, the key is never stored.
 CREATE TABLE IF NOT EXISTS conversation (
   id TEXT PRIMARY KEY,
   key_hash TEXT NOT NULL,
