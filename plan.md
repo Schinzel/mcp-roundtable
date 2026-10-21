@@ -12,7 +12,11 @@ Ersätter PAL MCP.
 Status: steg 3 klart 2026-10-20. `chat` svarar från Gemini och GPT via claude.ai-connectorn, så `Authorization`
 i Request headers når servern. Utan nyckel ger isError. `chat` drar 18–56 ms CPU på grund av kallstarter, se Cloudflare-gränser.
 Steg 4 klart 2026-10-20: tre rundor med Gemini via claude.ai med full kontext, fel nyckel och annan modell
-nekas. `chat` med D1 22–45 ms CPU, inga fel. Nästa: steg 5.
+nekas. `chat` med D1 22–45 ms CPU, inga fel.
+Steg 5 klart 2026-10-20. Budgeten testad mot produktionen med google/gemini-nano-banana-2.1 (65 536 tokens) och
+en fil på 210 048 tecken: isError "Too large for ... about 52,532 tokens (files 52,523, history 0, prompt 9),
+limit 49,152", utan anrop till OpenRouter. 18 ms CPU, outcome ok, ingen 1102. Testet gick via curl, eftersom
+Claude inte kan skriva 210 000 tecken i ett verktygsargument. Nästa: steg 6.
 
 # Problem att lösa
 Ett andra, tredje och fjärde par ögon när det behövs:
