@@ -5,6 +5,7 @@ import { filterModels, MAX_AGE_DAYS, MODEL_AUTHORS } from "./core/models.js";
 import { resolveThinking, THINKING_LEVELS } from "./core/thinking.js";
 import { chat, getModels } from "./openrouter.js";
 import { loadConversation, saveTurn } from "./store.js";
+import { VERSION } from "./version.js";
 
 const schema = (properties, required) =>
   fromJsonSchema({ type: "object", properties, required, additionalProperties: false });
@@ -34,7 +35,7 @@ const UNKNOWN_CONVERSATION =
  * @returns {McpServer}
  */
 export function buildServer(env, key) {
-  const server = new McpServer({ name: "roundtable", version: "0.1.0" }, { instructions: INSTRUCTIONS });
+  const server = new McpServer({ name: "roundtable", version: VERSION }, { instructions: INSTRUCTIONS });
 
   server.registerTool(
     "list_models",
@@ -42,10 +43,19 @@ export function buildServer(env, key) {
       description:
         `Lists OpenRouter models from ${MODEL_AUTHORS.join(", ")}, added in the last ${MAX_AGE_DAYS} days, newest first. ` +
         "Returns slug, name, context window in tokens, the date the model was added, and the thinking levels the model " +
-        "supports with its default. Use the slug exactly as written.",
+        "supports with its default, and server_version. Use the slug exactly as written.",
       inputSchema: schema({ filter: { type: "string", description: "Text that must appear in the slug or name, e.g. gemini" } }, []),
     },
-    guard(async ({ filter }) => ({ models: filterModels(await getModels(env.CACHE), filter) })),
+    guard(async ({ filter }) => ({ server_version: VERSION, models: filterModels(await getModels(env.CACHE), filter) })),
+  );
+
+  server.registerTool(
+    "version",
+    {
+      description: "Returns the version of the Roundtable server that is running.",
+      inputSchema: schema({}, []),
+    },
+    guard(async () => ({ version: VERSION })),
   );
 
   server.registerTool(

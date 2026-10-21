@@ -36,7 +36,8 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 - `src/openrouter.js` thin layer over OpenRouter's API.
 - `src/store.js` thin layer over D1, conversations for continuation_id.
 - `migrations/` D1 schema. Run against production with `bunx wrangler d1 migrations apply mcp-roundtable --remote` before push, Workers Builds does not run them.
-- `src/index.js` Worker entry, routes to the MCP handler.
+- `src/index.js` Worker entry, routes to the MCP handler and serves `/version`.
+- `src/version.js` the version from `package.json`.
 - `test/integration/` vitest against SELF in workerd.
 - `package.json` dependencies and scripts. The scripts are shortcuts for the commands above and run in the Dev Container.
   JSON cannot have comments, so it is described here.
@@ -45,7 +46,7 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 ## Decisions
 
 ### Scope
-- The server is primitive: `list_models` and `chat`. Claude runs the discussion itself, and formats become MCP prompts.
+- The server is primitive: `list_models`, `chat` and `version`. Claude runs the discussion itself, and formats become MCP prompts.
 - Only exact OpenRouter slugs, no aliases like "latest GPT", so it is visible which model answered.
 - Few but flawless features. Nothing new until `chat` works flawlessly.
 
@@ -103,6 +104,17 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
   on the assistant message in D1. NULL on user messages, turns before migration 0003, and fields OpenRouter leaves out.
   Reasoning tokens are billed as output but their text is not kept, so this is the only record of them.
 - Evicted conversations take their usage with them. Fine as long as usage is for estimates, not billing.
+
+### Version
+- Semver, set by hand in `package.json`, the only place it is written. `src/version.js` reads it.
+- x: something that worked stops working, a tool, parameter or answer field removed or renamed. y: something new
+  that breaks nothing. z: fixes that do not change the interface. Stays 0.x until the server is done, about step 9,
+  so y may also break things.
+- Bump the version in every commit that changes how the server behaves, before push.
+- Readable four ways: `serverInfo.version` in initialize, `GET /version`, `server_version` in `list_models`, and the
+  tool `version`. After a deploy, `curl <production URL>/version` shows if the new code runs.
+- Rejected: commit SHA and deploy time from Cloudflare. They need wiring for both deploy paths, and a version number
+  says more to a person.
 
 ### Storage
 - Protection against someone filling D1. The free plan does not charge, so the risk is that the service stops working.

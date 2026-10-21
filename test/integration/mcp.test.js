@@ -60,7 +60,17 @@ describe("MCP", () => {
 
   it("lists the tools", async () => {
     const body = await rpc("tools/list");
-    expect(body.result.tools.map((t) => t.name).sort()).toEqual(["chat", "list_models"]);
+    expect(body.result.tools.map((t) => t.name).sort()).toEqual(["chat", "list_models", "version"]);
+  });
+
+  it("gives the version from package.json in initialize, /version, list_models and the version tool", async () => {
+    const { version } = (await import("../../package.json", { with: { type: "json" } })).default;
+    const init = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } });
+    expect(init.result.serverInfo.version).toBe(version);
+    expect(await (await SELF.fetch("http://example.com/version")).json()).toEqual({ version });
+    mockOpenRouter(200, { data: [] });
+    expect((await call("list_models", {})).json.server_version).toBe(version);
+    expect((await call("version", {})).json).toEqual({ version });
   });
 
   it("other paths give 404", async () => {

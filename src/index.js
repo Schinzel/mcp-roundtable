@@ -1,6 +1,7 @@
-// Worker entry. Only /mcp is served, with the user's OpenRouter key taken from the request headers.
+// Worker entry. Serves /mcp, with the user's OpenRouter key taken from the request headers, and /version.
 import { openRouterKey } from "./core/auth.js";
 import { createHandler } from "./mcp.js";
+import { VERSION } from "./version.js";
 
 export default {
   /**
@@ -12,6 +13,7 @@ export default {
     if (url.pathname === "/mcp") {
       return createHandler(env, openRouterKey(request.headers)).fetch(request);
     }
+    if (url.pathname === "/version") return Response.json({ version: VERSION });
     return new Response("Not found", { status: 404 });
   },
 };

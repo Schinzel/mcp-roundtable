@@ -16,6 +16,7 @@ The server is deliberately small. It gives Claude one way to talk to another mod
 |---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `list_models` | Current models from OpenAI, Google, Anthropic, xAI and DeepSeek, newest first, with context size and supported thinking levels                                                                    |
 | `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. Optional `thinking` sets how hard the model reasons. Pass the returned `continuation_id` to continue the conversation |
+| `version`     | The version of the server that is running. Also at `/version`                                                                                                                                     |
 
 | Prompt      | Setup *(coming)*                                          |
 |-------------|-----------------------------------------------------------|
