@@ -1,8 +1,7 @@
 # mcp-roundtable
 
-Remote MCP-server på Cloudflare Workers som låter Claude ringa upp andra modeller via OpenRouter och låta dem diskutera med varandra.
-
 ## Läs först
+- README.md: vad servern gör, installation, användning, `./start.sh`, `./shell.sh`, produktions-URL och deploy vid push.
 - plan.md: problem, beslut, MCP tools, steg och Cloudflare-gränser. Ändra design där, inte här.
 
 ## Konventioner
@@ -10,11 +9,11 @@ Remote MCP-server på Cloudflare Workers som låter Claude ringa upp andra model
 - Pakethanterare: Bun.
 - MCP-bibliotek: `@modelcontextprotocol/server`, createMcpHandler, stateless.
 - Kärnlogik i `src/core/` utan Cloudflare-beroenden, så den kan enhetstestas med `bun test`.
+- Upprepa inte i CLAUDE.md det som står i README.md. Peka på README i stället och skriv här bara det README saknar.
 - Text som modeller och användare läser är på engelska: verktygsbeskrivningar, parametrar, felmeddelanden, README. Kodkommentarer och testnamn på svenska.
 
 ## Kommandon
-- `./start.sh` från Macen: bygger containern vid behov och startar servern på port 8787.
-- `./shell.sh` från Macen: skal i containern för att köra kommandona nedan. Kräver att `./start.sh` har byggt imagen.
+`./start.sh` och `./shell.sh` körs från Macen, se README. `./shell.sh` kräver att `./start.sh` har byggt imagen.
 
 Nedanstående körs i Dev Containern. Macens Node är x86_64 under Rosetta, så vitest och wrangler fungerar inte utanför containern.
 
@@ -24,8 +23,7 @@ Nedanstående körs i Dev Containern. Macens Node är x86_64 under Rosetta, så 
 - `bunx wrangler dev` startar servern på port 8787. MCP-endpoint: `http://localhost:8787/mcp`.
 
 ## Deploy
-Push till main deployar automatiskt via Workers Builds till https://mcp-roundtable.treceni.workers.dev, MCP på `/mcp`.
-Manuell deploy från Macen, med wrangler-inloggningen monterad:
+Push till main och produktions-URL: se README. Manuell deploy från Macen, med wrangler-inloggningen monterad:
 `docker run --rm -v ~/code/mcp-roundtable:/workspace -v mcp-roundtable-node-modules:/workspace/node_modules -v ~/Library/Preferences/.wrangler:/root/.config/.wrangler -w /workspace mcp-roundtable-dev bunx wrangler deploy`
 
 ## Struktur
