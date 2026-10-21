@@ -28,8 +28,7 @@ Push till main deployar automatiskt via Workers Builds till produktions-URL:en i
 Manuell deploy från Macen, med wrangler-inloggningen monterad:
 `docker run --rm -v ~/code/mcp-roundtable:/workspace -v mcp-roundtable-node-modules:/workspace/node_modules -v ~/Library/Preferences/.wrangler:/root/.config/.wrangler -w /workspace mcp-roundtable-dev bunx wrangler deploy`
 
-Cloudflare-kontot är [borttaget], Account ID [borttaget], samma som ai-storage.
-Macens wrangler-inloggning ser bara det kontot. Workers Builds kräver att Cloudflares GitHub-app har tillgång till repot.
+Cloudflare-kontot är samma som ai-storage. `wrangler whoami` visar det, och Macens wrangler-inloggning ser bara det kontot. Workers Builds kräver att Cloudflares GitHub-app har tillgång till repot.
 
 ## Struktur
 - `src/core/` ren logik utan Cloudflare-beroenden, testas med bun test.
