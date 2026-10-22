@@ -147,10 +147,10 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 ## Remaining work
 Steps 1–5 done 2026-10-20: skeleton, `list_models`, `chat`, continuation_id and files. Step 10, PAL removed, done 2026-10-21.
 Step 6, `thinking`, done and verified in production 2026-10-21. `temperature` was dropped, see Decisions.
+Step 7, the connector in claude.ai, done 2026-10-22. It also works from Claude Code, where the key in the header reaches the server.
 
 | Step | What                                 | Done when                                                |
 |------|--------------------------------------|----------------------------------------------------------|
-| 7    | Connector in claude.ai               | Already in use. Left: does the header reach Claude Code? |
 | 8    | Prompts consensus, tenth_man, critic | A consensus discussion run end to end                    |
 | 9    | README that sells the concept, gif   | The concept is clear in ten seconds                      |
 
