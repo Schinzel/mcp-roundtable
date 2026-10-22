@@ -2,11 +2,17 @@
 
 A remote MCP server that lets Claude call other models through OpenRouter and have them discuss a problem with each other.
 
-Use it when you want a second, third or fourth opinion: a hard problem where getting it right matters, or a field you don't know well (or you're just too tired to trust yourself). Claude asks GPT, Gemini, Grok or DeepSeek, argues with their answers and tells you where they agreed and where they didn't.
 
-Runs on Cloudflare Workers. You bring your own OpenRouter key.
+## When to use it
 
-> **Status:** early. `list_models` and `chat` work, with follow-up rounds. The discussion prompts are being built.
+Use it when you want a second opinion, or a third.
+
+- A difficult problem, where you or a single model may land on an incorrect or suboptimal answer.
+- A decision that is expensive to reverse: a schema, an API, an architecture.
+- A field you do not know well, so you cannot judge the answer yourself.
+- The end of a long day, when you are tired and want someone else to check the work.
+
+Claude asks GPT, Gemini, Grok or DeepSeek, argues with their answers, and tells you where they agreed and where they did not.
 
 ## What it does
 

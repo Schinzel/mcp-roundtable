@@ -31,6 +31,8 @@ Manual deploy from the Mac, with the wrangler login mounted:
 The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, and the Mac's wrangler login only sees that account. Workers Builds requires that Cloudflare's GitHub app has access to the repo.
 
 ## Structure
+- `docs/formats/` specs for the discussion formats, one file per format.
+  The prompt texts in the code are written from them.
 - `src/core/` pure logic without Cloudflare dependencies, tested with bun test.
 - `src/mcp.js` tool definitions and MCP server.
 - `src/openrouter.js` thin layer over OpenRouter's API.
