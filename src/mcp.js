@@ -1,6 +1,7 @@
 import { createMcpHandler, fromJsonSchema, McpServer } from "@modelcontextprotocol/server";
 import { keyHash } from "./core/conversation.js";
 import { budgetError, composePrompt } from "./core/files.js";
+import { FORMAT_INSTRUCTIONS, FORMATS } from "./core/formats.js";
 import { filterModels, MAX_AGE_DAYS, MODEL_AUTHORS } from "./core/models.js";
 import { resolveThinking, THINKING_LEVELS } from "./core/thinking.js";
 import { chat, getModels } from "./openrouter.js";
@@ -10,9 +11,10 @@ import { VERSION } from "./version.js";
 const schema = (properties, required) =>
   fromJsonSchema({ type: "object", properties, required, additionalProperties: false });
 
-/** Shown to Claude by the client. Option table and cost line in every report, see CLAUDE.md, Reporting. */
+/** Shown to Claude by the client. The formats in brief, the report rule and the cost line, see CLAUDE.md, Formats and Reporting. */
 const INSTRUCTIONS =
   "Roundtable lets you ask other models through OpenRouter. You run the discussion yourself with list_models and chat.\n\n" +
+  FORMAT_INSTRUCTIONS + "\n\n" +
   "The report of a discussion is short: it is there to relieve the user, not to be read like a document. " +
   "When a discussion compares options, never refer to an option by a letter or number alone. " +
   "Start with a table that defines every option in one line each: its label and what it is. " +
@@ -135,6 +137,18 @@ export function buildServer(env, key) {
       return { ...answer, ...(effort && { thinking: effort }), continuation_id: id };
     }),
   );
+
+  for (const [name, format] of Object.entries(FORMATS)) {
+    server.registerPrompt(
+      name,
+      {
+        title: format.title,
+        description: format.description,
+        argsSchema: schema({ [format.argument.name]: { type: "string", description: format.argument.description } }, [format.argument.name]),
+      },
+      (args) => ({ messages: [{ role: "user", content: { type: "text", text: format.prompt(args[format.argument.name]) } }] }),
+    );
+  }
 
   return server;
 }

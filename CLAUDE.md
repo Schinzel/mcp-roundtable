@@ -34,6 +34,8 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 - `docs/formats/` specs for the discussion formats, one file per format.
   The prompt texts in the code are written from them.
 - `src/core/` pure logic without Cloudflare dependencies, tested with bun test.
+- `src/core/formats.js` the formats as text: the full flow for the prompts and a compact version for the server
+  instructions. Written from `docs/formats/`. The test checks that both carry the invariants.
 - `src/mcp.js` tool definitions and MCP server.
 - `src/openrouter.js` thin layer over OpenRouter's API.
 - `src/store.js` thin layer over D1, conversations for continuation_id.
@@ -57,6 +59,13 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
   how many models are asked: consensus ends in a verdict per option, critic in a list of findings.
 - No `tenth_man` format. The tenth man is a phase inside consensus when the models agree, and a critic with a
   conclusion as input covers it on its own. A third format is added only when it solves a real problem the two cannot.
+- Delivered two ways from one source, decided in a consensus discussion 2026-10-22: the full flow as MCP prompts,
+  `/roundtable:consensus` and `/roundtable:critic`, and a compact version in the server instructions so Claude runs a
+  format from running text, "discuss this with Gemini and OpenAI". Prompts are user-triggered, so instructions are the
+  only thing Claude always sees. Rejected: tools that run the flow in the server like PAL (CPU budget, state, against
+  Scope), and thin tools that only return the format text (an extra round trip, tools that look like they execute,
+  risk of capturing single-model questions). The tenth man's condition, accepted: compact and full cannot be the same
+  text, so one source with two renderings and a test that both carry the invariants.
 
 ### list_models
 - The filter `model_authors` and `max_age_days` 365 runs at OpenRouter to save CPU. The full list is 785 KB.
@@ -167,12 +176,11 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 Steps 1–5 done 2026-10-20: skeleton, `list_models`, `chat`, continuation_id and files. Step 10, PAL removed, done 2026-10-21.
 Step 6, `thinking`, done and verified in production 2026-10-21. `temperature` was dropped, see Decisions.
 Step 7, the connector in claude.ai, done 2026-10-22. It also works from Claude Code, where the key in the header reaches the server.
+Step 8, the prompts, done 2026-10-22. The formats also run from running text via the server instructions, so the open
+question about slash commands is settled: both.
 
-| Step | What                               | Done when                             |
-|------|------------------------------------|---------------------------------------|
-| 8    | Prompts consensus and critic       | A consensus discussion run end to end |
-| 9    | README that sells the concept, gif | The concept is clear in ten seconds   |
-
-Open until step 8: whether Claude Code picks MCP prompts on its own from running text, or only via slash command.
+| Step | What                               | Done when                           |
+|------|------------------------------------|-------------------------------------|
+| 9    | README that sells the concept, gif | The concept is clear in ten seconds |
 
 Later, not now: the tool `discuss` that runs a whole format in the server, cost limit per day, more formats.

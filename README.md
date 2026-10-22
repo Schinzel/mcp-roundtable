@@ -24,7 +24,7 @@ The server is deliberately small. It gives Claude one way to talk to another mod
 | `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. Optional `thinking` sets how hard the model reasons. Pass the returned `continuation_id` to continue the conversation |
 | `version`     | The version of the server that is running. Also at `/version`                                                                                                                                     |
 
-| Prompt      | Setup *(coming)*                                                                                                                    |
+| Prompt      | Setup                                                                                                                               |
 |-------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | `consensus` | Several models answer an open question independently. If they agree, a tenth man has to find out why they are wrong                 |
 | `critic`    | Several models, each with its own focus such as security or maintenance, review something that exists. Claude answers every finding |

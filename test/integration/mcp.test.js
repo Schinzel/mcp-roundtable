@@ -63,6 +63,30 @@ describe("MCP", () => {
     expect(body.result.tools.map((t) => t.name).sort()).toEqual(["chat", "list_models", "version"]);
   });
 
+  it("lists the prompts consensus and critic with one required argument each", async () => {
+    const body = await rpc("prompts/list");
+    const prompts = body.result.prompts.map((p) => ({ name: p.name, args: p.arguments.map((a) => `${a.name}:${a.required}`) }));
+    expect(prompts).toEqual([
+      { name: "consensus", args: ["question:true"] },
+      { name: "critic", args: ["subject:true"] },
+    ]);
+  });
+
+  it("gets a prompt with the full flow and the argument last", async () => {
+    const body = await rpc("prompts/get", { name: "consensus", arguments: { question: "KV or D1 for the model list?" } });
+    const text = body.result.messages[0].content.text;
+    expect(body.result.messages[0].role).toBe("user");
+    expect(text).toContain("Step 2 of max 5: blind round");
+    expect(text).toContain("tenth man");
+    expect(text).toMatch(/KV or D1 for the model list\?$/);
+  });
+
+  it("the instructions carry both formats in brief", async () => {
+    const body = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } });
+    expect(body.result.instructions).toContain("consensus, for an open question");
+    expect(body.result.instructions).toContain("critic, for something that exists");
+  });
+
   it("gives the version from package.json in initialize, /version, list_models and the version tool", async () => {
     const { version } = (await import("../../package.json", { with: { type: "json" } })).default;
     const init = await rpc("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } });
