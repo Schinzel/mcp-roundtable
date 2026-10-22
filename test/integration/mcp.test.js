@@ -54,7 +54,7 @@ describe("MCP", () => {
       clientInfo: { name: "test", version: "0" },
     });
     expect(body.result.serverInfo.name).toBe("roundtable");
-    expect(body.result.instructions).toContain("Start with a table that defines every option");
+    expect(body.result.instructions).toContain("Start with a table that defines every option in one line each");
     expect(body.result.instructions).toContain("End the report with one line of cost");
   });
 

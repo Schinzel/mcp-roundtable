@@ -52,6 +52,12 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 - Only exact OpenRouter slugs, no aliases like "latest GPT", so it is visible which model answered.
 - Few but flawless features. Nothing new until `chat` works flawlessly.
 
+### Formats
+- Two formats, `consensus` and `critic`, specified in `docs/formats/`. They differ in the shape of the answer, not in
+  how many models are asked: consensus ends in a verdict per option, critic in a list of findings.
+- No `tenth_man` format. The tenth man is a phase inside consensus when the models agree, and a critic with a
+  conclusion as input covers it on its own. A third format is added only when it solves a real problem the two cannot.
+
 ### list_models
 - The filter `model_authors` and `max_age_days` 365 runs at OpenRouter to save CPU. The full list is 785 KB.
 - The server removes slugs with `:` and `~`, that is variants like `:free` and OpenRouter's aliases.
@@ -86,8 +92,11 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 
 ### Reporting
 - PAL often reported "option B won with 90% confidence" without saying what A, B and C were, which made the answer
-  useless. The server instructions therefore require a table that defines every option before any verdict, with
-  outcome per option: which models backed it, confidence, strongest counterargument.
+  useless. The server instructions therefore require a table that defines every option before any verdict.
+- The report is short: a table with the options, one line each, then a table with the chosen option: which models
+  backed it, confidence, strongest counterargument. Nothing else. A first version reported round by round, with every
+  model's position and every tenth man objection answered, and that was a document to read instead of a relief. The
+  details stay in the conversation, and the user asks for them.
 - The rule is in the server instructions, and `chat`'s description points to it in case a client does not show them.
   The prompts in step 8 get the same rule.
 - The report ends with one line of cost: total USD, per model, reasoning tokens. Claude sums `usage.cost_usd` from the
@@ -138,6 +147,14 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 - Workers logs are turned off. Never log the key.
 - Self-hosting with a "Deploy to Cloudflare" button was rejected.
 
+### Timeouts
+- Claude Code gives up on a tool call 60 seconds after it is sent, also for claude.ai connectors. claude.ai and Claude
+  Desktop have a limit too, and no setting for it. The user must not have to change settings, so the formats fit the
+  limit: `thinking` medium as default, answers under 500 words, one retry a level lower on timeout.
+- The server sends no progress notifications. Whether they would extend the limit is undocumented, and the handler is
+  stateless. Revisit if medium still times out.
+- A call that times out in the client has still cost money at OpenRouter, and the turn is lost. Nothing is saved.
+
 ### Cloudflare limits
 - The free plan gives 10 ms CPU per request. Over the limit gives Error 1102. Waiting on OpenRouter and D1 does not count.
 - `chat` uses 18–56 ms because of cold starts. The bundle is 886 KB, mostly zod and the MCP SDK, and is compiled in every
@@ -151,10 +168,10 @@ Steps 1–5 done 2026-10-20: skeleton, `list_models`, `chat`, continuation_id an
 Step 6, `thinking`, done and verified in production 2026-10-21. `temperature` was dropped, see Decisions.
 Step 7, the connector in claude.ai, done 2026-10-22. It also works from Claude Code, where the key in the header reaches the server.
 
-| Step | What                                 | Done when                                                |
-|------|--------------------------------------|----------------------------------------------------------|
-| 8    | Prompts consensus, tenth_man, critic | A consensus discussion run end to end                    |
-| 9    | README that sells the concept, gif   | The concept is clear in ten seconds                      |
+| Step | What                               | Done when                             |
+|------|------------------------------------|---------------------------------------|
+| 8    | Prompts consensus and critic       | A consensus discussion run end to end |
+| 9    | README that sells the concept, gif | The concept is clear in ten seconds   |
 
 Open until step 8: whether Claude Code picks MCP prompts on its own from running text, or only via slash command.
 

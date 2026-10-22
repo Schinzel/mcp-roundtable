@@ -13,10 +13,12 @@ const schema = (properties, required) =>
 /** Shown to Claude by the client. Option table and cost line in every report, see CLAUDE.md, Reporting. */
 const INSTRUCTIONS =
   "Roundtable lets you ask other models through OpenRouter. You run the discussion yourself with list_models and chat.\n\n" +
-  "When a discussion compares options, never refer to an option by a letter or number alone in your report to the user. " +
-  "Start with a table that defines every option: its label, what it is, and what choosing it means. " +
-  "Then show the outcome per option: which models backed it, their confidence, and the strongest counterargument. " +
-  "The user must be able to understand the result without having seen the discussion.\n\n" +
+  "The report of a discussion is short: it is there to relieve the user, not to be read like a document. " +
+  "When a discussion compares options, never refer to an option by a letter or number alone. " +
+  "Start with a table that defines every option in one line each: its label and what it is. " +
+  "Then a table with the chosen option: which models backed it, their confidence, and the strongest counterargument. " +
+  "Nothing else, no round by round. The user must be able to understand the result without having seen the discussion, " +
+  "and can ask for the details, which are still in the conversation.\n\n" +
   "End the report with one line of cost: total USD, per model, and reasoning tokens, from usage in the chat answers. " +
   "If a turn has no cost_usd, say the total is a lower bound.";
 
@@ -67,7 +69,7 @@ export function buildServer(env, key) {
         "turns of that conversation, so include all other context it needs. " +
         "To ask several models in parallel, make several chat calls at the same time, each with its own continuation_id. " +
         "Files are kept in the conversation, so with continuation_id send only new or changed files. " +
-        "When reporting a discussion of options, follow the server instructions: a table that defines each option before any verdict.",
+        "When reporting a discussion of options, follow the server instructions: a table that defines each option, then a table with the chosen option.",
       inputSchema: schema(
         {
           model: { type: "string", description: "Exact OpenRouter slug, e.g. openai/gpt-6.1-sol" },
