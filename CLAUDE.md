@@ -57,6 +57,13 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 ### Formats
 - Two formats, `consensus` and `critic`, specified in `docs/formats/`. They differ in the shape of the answer, not in
   how many models are asked: consensus ends in a verdict per option, critic in a list of findings.
+- The report always ends in a chosen option, and the models choose it, never Claude. A majority after the second
+  round decides; without one, a deciding round where each model ranks the options still backed by someone, lowest
+  summed rank wins. Found 2026-10-23 when three models backed three different pans and the report had no answer.
+  PAL always had an answer because Claude synthesized and the models never had to agree. Rejected: Claude choosing
+  when there is no majority, since a choice by someone outside the discussion is not its conclusion, and more rounds
+  until a majority forms, a loop with no end. Ranking rather than a vote, because a 1-1-1 split often hides an option
+  that is everybody's first or second choice.
 - No `tenth_man` format. The tenth man is a phase inside consensus when the models agree, and a critic with a
   conclusion as input covers it on its own. A third format is added only when it solves a real problem the two cannot.
 - Delivered two ways from one source, decided in a consensus discussion 2026-10-22: the full flow as MCP prompts,
@@ -102,8 +109,9 @@ The Cloudflare account is the same as ai-storage. `wrangler whoami` shows it, an
 ### Reporting
 - PAL often reported "option B won with 90% confidence" without saying what A, B and C were, which made the answer
   useless. The server instructions therefore require a table that defines every option before any verdict.
-- The report is short: a table with the options, one line each, then a table with the chosen option: which models
-  backed it, confidence, strongest counterargument. Nothing else. A first version reported round by round, with every
+- The report is short: a table with the options, one line each, then a table with the chosen option: why it was
+  chosen, which models backed it, confidence, strongest counterargument. Nothing else. The why column came
+  2026-10-23: a table with the counterargument but not the argument read backwards. A first version reported round by round, with every
   model's position and every tenth man objection answered, and that was a document to read instead of a relief. The
   details stay in the conversation, and the user asks for them.
 - The rule is in the server instructions, and `chat`'s description points to it in case a client does not show them.
@@ -178,9 +186,8 @@ Step 6, `thinking`, done and verified in production 2026-10-21. `temperature` wa
 Step 7, the connector in claude.ai, done 2026-10-22. It also works from Claude Code, where the key in the header reaches the server.
 Step 8, the prompts, done 2026-10-22. The formats also run from running text via the server instructions, so the open
 question about slash commands is settled: both.
-
-| Step | What                               | Done when                           |
-|------|------------------------------------|-------------------------------------|
-| 9    | README that sells the concept, gif | The concept is clear in ten seconds |
+Step 9, the README, done 2026-10-23: the concept first, a flow diagram in `docs/images/consensus.svg`, a real example.
+The reader it is written for is someone judging the author, in an interview or before an assignment, not an installer.
+The same day the deciding round and the why column came out of running the example, see Formats and Reporting.
 
 Later, not now: the tool `discuss` that runs a whole format in the server, cost limit per day, more formats.

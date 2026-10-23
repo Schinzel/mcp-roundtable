@@ -26,18 +26,25 @@ const CONSENSUS_FLOW =
   "context, constraints and what is already ruled out, and asks for exactly this structure: Verdict, one sentence " +
   "naming the option; Analysis, strengths and weaknesses weighted by impact and likelihood, no artificial 50/50; " +
   "Confidence 1–10 with what drives it; Key takeaways, 3–5 bullets. The model may propose another option.\n\n" +
-  "Step 3 of max 5: tenth man, only if every model backs the same option. Confidence does not matter, the same " +
-  "option is enough. Ask a model outside the round, one that did not take part, in a new conversation: assume the majority is wrong and look " +
-  "for why. Give it the question, the context and the shared conclusion with its main arguments. It answers with the " +
-  "concrete scenario in which the majority is wrong, how likely it is, and what would have to be true. 'The majority " +
-  "holds' is allowed. Weigh every objection, accept or reject with a reason. Only an objection that changes the " +
-  "verdict or adds a condition reaches the report.\n\n" +
-  "Step 4 of max 5: second round, only if the models disagree. Each model continues its own conversation with " +
-  "continuation_id and gets the other answers without model names, and revises or holds with reasons. One round, " +
-  "not a loop. Never both step 3 and step 4: agreement after the second round is already tested.\n\n" +
-  "Step 5 of max 5: report, following the server instructions. A table that defines every option in one line, then " +
-  "a table with the chosen option: backed by which models, their confidence, the strongest counterargument. Then " +
-  "the cost line. Nothing else.\n\n" +
+  "Step 3 of max 5: second round, in one of two forms. Never both. " +
+  "With a tenth man, if every model backs the same option, confidence does not matter: a new model is added and " +
+  "argues against the agreed upon answer. Ask a model outside the round, one that did not take part, in a new " +
+  "conversation: assume the majority is wrong and look for why. Give it the question, the context and the shared " +
+  "conclusion with its main arguments. It answers with the concrete scenario in which the majority is wrong, how " +
+  "likely it is, and what would have to be true. 'The majority holds' is allowed. Weigh every objection, accept or " +
+  "reject with a reason. Only an objection that changes the verdict or adds a condition reaches the report. " +
+  "The same three, if the models disagree: each model continues its own conversation with continuation_id and " +
+  "gets the other answers without model names, and revises or holds with reasons. One round, not a loop. A " +
+  "majority after this round decides.\n\n" +
+  "Step 4 of max 5: deciding round, only if no option has a majority after the second round. The models end " +
+  "the discussion, never you. Keep the options still backed by at least one model, ideally two, and drop the " +
+  "rest. Each model continues its conversation with continuation_id, is told there was no majority, sees the " +
+  "last standing of every model without names, and ranks all remaining options with one line of reason per " +
+  "rank. Sum the ranks, lowest wins, a tie goes to the higher summed confidence from the second round.\n\n" +
+  "Step 5 of max 5: report, following the server instructions. A table that defines every option in one line, " +
+  "then a table with the chosen option: why it was chosen, backed by which models, their confidence, the " +
+  "strongest counterargument. After a deciding round, backed by shows the ranks. Then the cost line. Nothing " +
+  "else.\n\n" +
   COMMON;
 
 const CRITIC_FLOW =
@@ -89,10 +96,12 @@ export const FORMAT_INSTRUCTIONS =
   "not for a question to a single model. The full flow is in the prompts consensus and critic.\n\n" +
   "consensus, for an open question: write your own analysis first, it does not count as a vote. State the setup as " +
   "a table, provider, model, thinking. Blind round: the same neutral brief to each model in its own chat without " +
-  "continuation_id, asking for verdict, analysis, confidence 1–10 and takeaways under 500 words. If every model " +
-  "backs the same option, a tenth man, a model outside the round, assumes they are wrong and looks for why. " +
-  "Otherwise one second round where each model sees the others' answers without names and revises or holds. " +
-  "Never both.\n\n" +
+  "continuation_id, asking for verdict, analysis, confidence 1–10 and takeaways under 500 words. Second round, in " +
+  "one of two forms, never both. If every model backs the same option, with a tenth man: a model outside the " +
+  "round is added and argues against the agreed upon answer. Otherwise the same three: each model sees the " +
+  "others' answers without names and revises or holds. A majority after the second round decides. With no " +
+  "majority, a deciding round: keep the options still backed by at least one model, each model ranks them with " +
+  "continuation_id, lowest summed rank wins.\n\n" +
   "critic, for something that exists: state the goal. Default three models, each with its own focus area chosen " +
   "from the subject, never ask. State the setup as a table, provider, model, focus. Blind review, each critic in its own " +
   "chat without continuation_id, " +

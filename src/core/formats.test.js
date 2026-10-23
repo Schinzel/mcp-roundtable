@@ -14,6 +14,7 @@ const INVARIANTS = {
     "outside the round",
     "second round",
     "Never both",
+    "deciding round",
     "thinking medium",
     "Step",
     "one level lower",

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="640" viewBox="0 0 760 640" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect width="760" height="640" rx="12" fill="#fafafa"/>
+
+  <!-- question -->
+  <rect x="280" y="24" width="200" height="44" rx="8" fill="#fff" stroke="#999"/>
+  <text x="380" y="52" text-anchor="middle" fill="#222">Your question</text>
+  <line x1="380" y1="68" x2="380" y2="96" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- claude -->
+  <rect x="280" y="98" width="200" height="44" rx="8" fill="#e9dfd3" stroke="#b8a48c"/>
+  <text x="380" y="126" text-anchor="middle" fill="#222" font-weight="600">Claude</text>
+  <text x="500" y="120" fill="#666" font-size="13">writes its own answer first,</text>
+  <text x="500" y="137" fill="#666" font-size="13">then has no vote</text>
+
+  <!-- fan out -->
+  <path d="M380 142 V160 H180 V190" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <path d="M380 142 V190" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <path d="M380 142 V160 H580 V190" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- models -->
+  <rect x="110" y="192" width="140" height="44" rx="8" fill="#dfe8f3" stroke="#8aa4c4"/>
+  <text x="180" y="220" text-anchor="middle" fill="#222" font-weight="600">GPT</text>
+  <rect x="310" y="192" width="140" height="44" rx="8" fill="#dfe8f3" stroke="#8aa4c4"/>
+  <text x="380" y="220" text-anchor="middle" fill="#222" font-weight="600">Gemini</text>
+  <rect x="510" y="192" width="140" height="44" rx="8" fill="#dfe8f3" stroke="#8aa4c4"/>
+  <text x="580" y="220" text-anchor="middle" fill="#222" font-weight="600">Grok</text>
+  <!-- converge -->
+  <path d="M180 236 V276 H380" fill="none" stroke="#555" stroke-width="1.5"/>
+  <path d="M580 236 V276 H380" fill="none" stroke="#555" stroke-width="1.5"/>
+  <path d="M380 236 V300" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <rect x="210" y="246" width="340" height="18" fill="#fafafa"/>
+  <text x="380" y="259" text-anchor="middle" fill="#666" font-size="13">Each answers alone. None sees the others, or Claude.</text>
+
+  <!-- decision -->
+  <path d="M380 302 L450 338 L380 374 L310 338 Z" fill="#fff" stroke="#999"/>
+  <text x="380" y="343" text-anchor="middle" fill="#222">Agree?</text>
+
+  <!-- yes branch -->
+  <path d="M310 338 H180 V394" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="240" y="332" text-anchor="middle" fill="#666" font-size="13">yes</text>
+  <rect x="30" y="396" width="290" height="96" rx="8" fill="#f3e3e0" stroke="#c99a92"/>
+  <text x="175" y="422" text-anchor="middle" fill="#222" font-weight="600">Second round, with a tenth man</text>
+  <text x="175" y="442" text-anchor="middle" fill="#444" font-size="13">Using the tenth man principle. A new model</text>
+  <text x="175" y="459" text-anchor="middle" fill="#444" font-size="13">is added and argues against</text>
+  <text x="175" y="476" text-anchor="middle" fill="#444" font-size="13">the agreed upon answer.</text>
+
+  <!-- no branch -->
+  <path d="M450 338 H580 V394" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="520" y="332" text-anchor="middle" fill="#666" font-size="13">no</text>
+  <rect x="440" y="396" width="290" height="96" rx="8" fill="#dfe8f3" stroke="#8aa4c4"/>
+  <text x="585" y="422" text-anchor="middle" fill="#222" font-weight="600">Second round, the same three</text>
+  <text x="585" y="442" text-anchor="middle" fill="#444" font-size="13">Each sees the others' answers, revises or holds.</text>
+  <text x="585" y="459" text-anchor="middle" fill="#444" font-size="13">Still split? They rank the options</text>
+  <text x="585" y="476" text-anchor="middle" fill="#444" font-size="13">and the lowest total wins.</text>
+
+  <!-- to report -->
+  <path d="M180 492 V532 H380" fill="none" stroke="#555" stroke-width="1.5"/>
+  <path d="M580 492 V532 H380" fill="none" stroke="#555" stroke-width="1.5"/>
+  <path d="M380 532 V556" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#a)"/>
+
+  <!-- report -->
+  <rect x="180" y="558" width="400" height="56" rx="8" fill="#e9dfd3" stroke="#b8a48c"/>
+  <text x="380" y="581" text-anchor="middle" fill="#222" font-weight="600">Report</text>
+  <text x="380" y="601" text-anchor="middle" fill="#444" font-size="13">The options, the one chosen, why, who backed it, cost</text>
+</svg>

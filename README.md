@@ -1,7 +1,38 @@
 # mcp-roundtable
 
-A remote MCP server that lets Claude call other models through OpenRouter and have them discuss a problem with each other.
+Give your question to several AI models and let them argue about it.
 
+You ask Claude. Claude asks GPT, Gemini and Grok the same question, each one alone so they can't copy each other.
+Then it shows every model what the others said and lets them change their minds. If they all agree, a fourth model
+gets one job: assume they're wrong and find out why. You get a short report: the options, the one that won, why,
+and who backed it.
+
+It's an MCP server, so it plugs into Claude Code, claude.ai and Claude Desktop. The other models are reached through
+[OpenRouter](https://openrouter.ai), one API for all of them. You bring your own key.
+
+![How a consensus discussion runs](docs/images/consensus.svg)
+
+## An example
+
+Question: a beginner who wants to cook better is buying one frying pan. Cast iron, carbon steel or non-stick?
+
+Three models, three different answers in the first round. In the second round two of them swapped positions with
+each other. Still no majority, so they ranked the options, and this came out:
+
+| Option       | What it is                                                                   |
+|--------------|------------------------------------------------------------------------------|
+| Cast iron    | Heavy, holds heat, usually pre-seasoned, slow to respond                     |
+| Carbon steel | Lighter, responds fast, seasoned like cast iron, thin pans can warp          |
+| Non-stick    | Coated surface that releases food, cannot take high heat, wears out in years |
+
+| Chosen                     | Why                                                                                              | Backed by                     | Confidence | Strongest counterargument                                                 |
+|----------------------------|--------------------------------------------------------------------------------------------------|-------------------------------|------------|---------------------------------------------------------------------------|
+| Carbon steel, pre-seasoned | Light and quick to respond, so it teaches heat control. Pre-seasoned removes the hard first step | Gemini 1st, Grok 1st, GPT 2nd | 8, 7, 7    | It often comes unseasoned, and that first step is where beginners give up |
+
+Cost: about 0.06 USD. GPT 0.017, Gemini 0.019, Grok 0.023.
+
+Nine chat calls, a couple of minutes. Two of the three models changed their answer along the way, which is the
+point. The full discussion is still in the conversation if you want to read it.
 
 ## When to use it
 
@@ -12,11 +43,10 @@ Use it when you want a second opinion, or a third.
 - A field you do not know well, so you cannot judge the answer yourself.
 - The end of a long day, when you are tired and want several models to check the work.
 
-Claude asks GPT, Gemini, Grok or DeepSeek, argues with their answers, and tells you where they agreed and where they did not.
-
 ## What it does
 
-The server is deliberately small. It gives Claude one way to talk to another model, and Claude runs the discussion itself.
+The server is deliberately small. It gives Claude one way to talk to another model, and Claude runs the discussion
+itself. The rules of a discussion are a prompt, not code.
 
 | Tool          | What it does                                                                                                                                                                                      |
 |---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -24,9 +54,9 @@ The server is deliberately small. It gives Claude one way to talk to another mod
 | `chat`        | Sends a prompt to one model and returns the answer as is, with token usage. Optional `thinking` sets how hard the model reasons. Pass the returned `continuation_id` to continue the conversation |
 | `version`     | The version of the server that is running. Also at `/version`                                                                                                                                     |
 
-| Prompt      | Setup                                                                                                                               |
+| Prompt      | What it runs                                                                                                                        |
 |-------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| `consensus` | Several models answer an open question independently. If they agree, a tenth man has to find out why they are wrong                 |
+| `consensus` | The discussion above. Several models answer an open question. If they agree, a tenth man has to find out why they're wrong          |
 | `critic`    | Several models, each with its own focus such as security or maintenance, review something that exists. Claude answers every finding |
 
 Model names are exact OpenRouter slugs, like `openai/gpt-6.1-sol`. No aliases such as "latest GPT", so you always know which model answered.
@@ -89,4 +119,5 @@ In Claude Code the prompts appear as slash commands under `/roundtable:`.
 
 ## Development
 
-See [CLAUDE.md](CLAUDE.md) for development and design decisions.
+[CLAUDE.md](CLAUDE.md) has the setup, and the design decisions with what was rejected and why. The discussion
+formats are specified in [docs/formats](docs/formats).

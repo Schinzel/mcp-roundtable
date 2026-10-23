@@ -18,7 +18,8 @@ const INSTRUCTIONS =
   "The report of a discussion is short: it is there to relieve the user, not to be read like a document. " +
   "When a discussion compares options, never refer to an option by a letter or number alone. " +
   "Start with a table that defines every option in one line each: its label and what it is. " +
-  "Then a table with the chosen option: which models backed it, their confidence, and the strongest counterargument. " +
+  "Then a table with the chosen option: why it was chosen, which models backed it, their confidence, and the " +
+  "strongest counterargument. After a deciding round, backed by shows each model's rank. " +
   "Nothing else, no round by round. The user must be able to understand the result without having seen the discussion, " +
   "and can ask for the details, which are still in the conversation.\n\n" +
   "End the report with one line of cost: total USD, per model, and reasoning tokens, from usage in the chat answers. " +

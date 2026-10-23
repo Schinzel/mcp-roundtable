@@ -20,9 +20,32 @@ gets. If the models agree, a tenth man tests the shared conclusion.
   says so. The user cannot change the limit, so the format must fit it.
 
 ## Flow
-Every step starts with a line that shows where the discussion is: `Step 2 of max 5: blind round`. A conditional step
-that is not run gets its own line, `Step 3 of max 5 skipped: the models disagree, no tenth man`, so the numbering
-always holds and it is visible why a step is missing.
+The whole protocol:
+
+```
+analysis = claude.own_analysis(question)        # no vote
+
+answers = for each model: chat(brief)           # blind round, no continuation_id
+
+if all answers back the same option:            # second round, with a tenth man
+    objection = tenth_man(question, shared conclusion)   # a model outside the round
+    chosen = shared option, with any condition the objection adds
+else:                                           # second round, the same three
+    answers = for each model: chat(other answers, no names)   # continuation_id
+    if an option has a majority:
+        chosen = that option
+    else:                                       # deciding round
+        remaining = options still backed by at least one model
+        ranks = for each model: chat(rank remaining)
+        chosen = lowest summed rank, tie by summed confidence
+
+report(options, chosen, why, backed by, confidence, counterargument, cost)
+```
+
+The steps below carry the reasons. Every step starts with a line that shows where the discussion is:
+`Step 2 of max 5: blind round`. A conditional step that is not run gets its own line,
+`Step 4 of max 5 skipped: majority after the second round`, so the numbering always holds and it is visible why a
+step is missing.
 
 1. **Claude's own analysis first.** Claude writes its own answer before any model is asked, so it is a voice of its
    own and not only the one who summarizes. It is kept for the report. Claude is a participant without a vote: the
@@ -34,16 +57,28 @@ always holds and it is visible why a step is missing.
    difference of opinion.
 2. **Blind round.** Claude first states the setup to the user as a table with one row per model, the provider in the
    first column and the model slug in the second, plus the `thinking` level. Then each model gets the same question
-   through its own `chat` without `continuation_id`. No model sees
-   another model's answer or Claude's analysis. Otherwise model 2 and 3 anchor on model 1.
-3. **Tenth man, if the models agree.** See below.
-4. **Second round, if the models disagree.** Optional. Each model continues its own conversation with
-   `continuation_id` and gets the other answers, without model names. It either revises its answer or holds it, with
-   reasons. One round, not a loop. Steps 3 and 4 exclude each other: agreement after the second round is already
-   tested, since every model has seen the objections, so no tenth man follows it.
+   through its own `chat` without `continuation_id`. No model sees another model's answer or Claude's analysis.
+   Otherwise model 2 and 3 anchor on model 1.
+3. **Second round.** One step in two forms, and which one runs depends on the blind round. Never both: agreement
+   after a round with the same three is already tested, since every model has seen the objections.
+   - **With a tenth man, if the models agree.** A new model is added and argues against the agreed upon answer.
+     See below.
+   - **The same three, if the models disagree.** Each model continues its own conversation with `continuation_id`
+     and gets the other answers, without model names. It either revises its answer or holds it, with reasons. One
+     round, not a loop. A majority after this round decides.
+4. **Deciding round, if no option has a majority after the second round.** The discussion needs a way to end, and
+   the models end it, not Claude: a choice by someone outside the discussion is not the discussion's conclusion.
+   The options that are still backed by at least one model stay, ideally two, more when the models are spread out.
+   Options nobody backs any more are dropped. Each model continues its own conversation, is told there was no
+   majority, sees the last standing of every model without names, and ranks the remaining options, all of them,
+   with one line of reason per rank. Ranks are summed, the lowest sum wins. A tie goes to the option with the
+   higher summed confidence from the second round. Ranking rather than one more vote, because a 1-1-1 split often
+   hides an option that is everybody's first or second choice.
 5. **Report.** Following the server instructions: a table that defines every option in one line each, then a table
-   with the chosen option, which models backed it, confidence, strongest counterargument, and the cost line. Nothing
-   else. Claude's own analysis and the tenth man's objections appear only if they change the verdict, one line each.
+   with the chosen option: why it was chosen, which models backed it, confidence, strongest counterargument. Then the
+   cost line. Nothing else. The why column is there because a report that gives the counterargument but not the
+   argument reads backwards. After a deciding round, backed by shows the ranks, `Gemini 1st, Grok 2nd, GPT 2nd`.
+   Claude's own analysis and the tenth man's objections appear only if they change the verdict, one line each.
 
 ## Example report
 From a real discussion, 2026-10-22. Question: how should the formats be delivered to Claude so that both running
@@ -59,9 +94,9 @@ text and an explicit command work? Three models, two rounds. This is the whole r
 
 **Chosen**
 
-| Chosen  | Backed by         | Confidence | Strongest counterargument                                                        |
-|---------|-------------------|------------|----------------------------------------------------------------------------------|
-| Prompts | GPT, Gemini, Grok | 8, 9, 7    | Instructions can be buried in a long context, so the prompts must carry the flow |
+| Chosen  | Why                                                                                          | Backed by         | Confidence | Strongest counterargument                                                        |
+|---------|----------------------------------------------------------------------------------------------|-------------------|------------|----------------------------------------------------------------------------------|
+| Prompts | One source, and the instructions are the only text Claude always sees, so running text works | GPT, Gemini, Grok | 8, 9, 7    | Instructions can be buried in a long context, so the prompts must carry the flow |
 
 Cost: 0.07 USD, lower bound. GPT 0.019, Gemini 0.017, Grok 0.032. 5 439 reasoning tokens.
 
